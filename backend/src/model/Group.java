@@ -21,7 +21,7 @@ public class Group {
         membersUsernames.add(adminUsername) ;
     }
 
-    //getters and setters
+    // adding and removing members methods
 
     public void addMember(String username) {
         membersUsernames.add(username) ;
@@ -32,7 +32,7 @@ public class Group {
     }
 
     //getter and setter
-    
+
     public String getGroupId() {
         return groupId;
     }
