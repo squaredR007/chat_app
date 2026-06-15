@@ -52,8 +52,21 @@ public class UserRepository {
         return null;
     }
 
+    //find a user by number
+    public User getByNumber(String number){
+        if (number==null)
+            return null;
+
+        for (User user: users){
+            if (user.getNumber().equals(number))
+                return user;
+        }
+
+        return null;
+    }
+
     //delete a user by id
-    public boolean deleteUser(String userId){
+    public boolean deleteUserByUserId(String userId){
         if (userId==null)
             return false;
 
@@ -66,9 +79,31 @@ public class UserRepository {
         return false;
     }
 
+    //delete a user by number
+    public boolean deleteUserByNumber(String number){
+        if (number==null)
+            return false;
+
+        for (User user: users){
+            if (user.getNumber().equals(number)) {
+                users.remove(user);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     //check for the existence of a user by username
     public boolean existsByUsername(String username){
         if (getByUsername(username)==null)
+            return false;
+        return true;
+    }
+
+    //check for the existence of a user by number
+    public boolean existsByNumber(String number){
+        if (getByNumber(number)==null)
             return false;
         return true;
     }
