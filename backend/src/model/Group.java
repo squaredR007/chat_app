@@ -31,6 +31,8 @@ public class Group {
         membersUsernames.remove(username) ;
     }
 
+    //getter and setter
+    
     public String getGroupId() {
         return groupId;
     }
