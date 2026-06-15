@@ -14,33 +14,63 @@ public class UserRepository {
     }
 
     //save a user
-    public void addAUser(User user){
-        if (user!=null && !findByUsername(user.getUsername()) && !findByUserId(user.getUserId()))
-            users.add(user);
+    public boolean addAUser(User user){
+        if (user == null)
+            return false;
+        if (existsByUsername(user.getUsername()))
+            return false;
+        if (getByUserId(user.getUserId()) != null)
+            return false;
+
+        users.add(user);
+        return true;
     }
 
     //find a user by username
-    public boolean findByUsername(String username){
+    public User getByUsername(String username){
+        if (username==null)
+            return null;
+
         for (User user: users){
             if (user.getUsername().equals(username))
-                return true;
+                return user;
         }
-        return false;
+
+        return null;
     }
 
     //find a user by unique id
-    public boolean findByUserId(String userId){
+    public User getByUserId(String userId){
+        if (userId==null)
+            return null;
+
         for (User user: users){
             if (user.getUserId().equals(userId))
-                return true;
+                return user;
         }
+
+        return null;
+    }
+
+    //delete a user by id
+    public boolean deleteUser(String userId){
+        if (userId==null)
+            return false;
+
+        User user=getByUserId(userId);//create a user
+        if (user!=null) {
+            users.remove(user);
+            return true;
+        }
+
         return false;
     }
 
-    //delete a user
-    public void deleteUser(User user){
-        if (user!=null && users.contains(user))
-            users.remove(user);
+    //check for the existence of a user by username
+    public boolean existsByUsername(String username){
+        if (getByUsername(username)==null)
+            return false;
+        return true;
     }
 
     //getter
