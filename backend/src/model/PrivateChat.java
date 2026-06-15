@@ -1,15 +1,18 @@
 package model;
 
 public class PrivateChat extends Chat{
+    //needed fields
     private String user1Username ;
     private String user2Username ;
 
+    //constructor
     public PrivateChat(String chatId , String user1Username , String user2Username) {
         super(chatId);
         this.user1Username = user1Username ;
         this.user2Username = user2Username ;
     }
 
+    //getters and setters
     public String getDisplayName () {
         return user2Username ;
     }

@@ -2,6 +2,7 @@ package model;
 import java.time.LocalDateTime ;
 
 public class Message {
+    //needed fields
     private String id ;
     private String senderUsername ;
     private String content ;
@@ -12,11 +13,13 @@ public class Message {
     private boolean isEdited ;
     private boolean isReported ;
 
+    //enum class to identify if the message is text or media
     public enum MessageType {
         TEXT ,
         MEDIA
     }
 
+    //constructor
     public Message (String id , String senderUsername , String content , MessageType type) {
         this.id = id ;
         this.senderUsername = senderUsername ;
@@ -29,20 +32,24 @@ public class Message {
         isReported = false ;
     }
 
+    //a method for editing a message while the previous content is saved
     public void editContent (String newContent) {
         previousContent = content ;
         content = newContent ;
         isEdited = true ;
     }
 
+    //mark the message as deleted
     public void markAsDeleted () {
         isDeleted = true ;
     }
 
+    //mark the message as reported
     public void markAsReported () {
         isReported = true ;
     }
 
+    //getters and setters
     public String getId() {
         return id;
     }

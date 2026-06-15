@@ -4,17 +4,21 @@ import java.util.ArrayList ;
 import java.util.List ;
 
 public abstract class Chat {
+    //needed fields
     protected String chatId ;
     protected List<Message> messages ;
     protected boolean isPinned ;
     protected boolean isArchived ;
 
+    // constructor
     public Chat(String chatId) {
         this.chatId = chatId ;
         messages = new ArrayList<>();
         isPinned = false ;
         isArchived = false ;
     }
+
+    //getters and setters
 
     public void addMessage (Message message) {
         messages.add(message) ;
