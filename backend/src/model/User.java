@@ -23,6 +23,7 @@ public class User {
     private String biography;
     private String background; //profile background
     private long lastSeen;
+    private boolean darkMode;
 
     // social
     private List<String> contacts = new ArrayList<>();
@@ -45,6 +46,7 @@ public class User {
         this.biography = builder.biography;
         this.background = builder.background;
         this.lastSeen = System.currentTimeMillis();
+        this.darkMode=builder.darkMode;
 
         if (builder.contacts != null) {
             this.contacts = builder.contacts;
@@ -106,6 +108,8 @@ public class User {
         return lastSeen;
     }
 
+    public boolean isDarkMode() { return darkMode; }
+
     public String getDisplayName() {
         return displayName;
     }
@@ -155,6 +159,10 @@ public class User {
         this.lastSeen = lastSeen;
     }
 
+    public void setDarkMode(boolean darkMode) {
+        this.darkMode = darkMode;
+    }
+
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
@@ -188,6 +196,7 @@ public class User {
         private String profileImage;
         private String biography;
         private String background;
+        private boolean darkMode;
 
         private List<String> contacts;
         private List<String> blockedUsers;
@@ -239,6 +248,11 @@ public class User {
 
         public Builder background(String background) {
             this.background = background;
+            return this;
+        }
+
+        public Builder darkMode(boolean darkMode){
+            this.darkMode=darkMode;
             return this;
         }
 
