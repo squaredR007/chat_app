@@ -2,6 +2,7 @@ package model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class User {
 
@@ -14,8 +15,8 @@ public class User {
     private final String userId;
 
     // security
-    private int wrongPasswordCount;
-    private long blockedUntil;
+    private long lockUntil;
+    private int failedLoginAttempts;
 
     // profile
     private String displayName;
@@ -36,10 +37,10 @@ public class User {
         this.password = builder.password;
         this.number = builder.number;
 
-        this.userId = (builder.userId != null) ? builder.userId : "U" + System.currentTimeMillis();
+        this.userId = (builder.userId != null) ? builder.userId : UUID.randomUUID().toString();
 
-        this.wrongPasswordCount = builder.wrongPasswordCount;
-        this.blockedUntil = builder.blockedUntil;
+        this.lockUntil = builder.lockUntil;
+        this.failedLoginAttempts=builder.failedLoginAttempts;
 
         this.displayName = builder.displayName;
         this.profileImage = builder.profileImage;
@@ -56,6 +57,16 @@ public class User {
             this.blockedUsers = builder.blockedUsers;
         }
     }
+
+    //security login
+    public void incrementFailedLoginAttempts() {
+        this.failedLoginAttempts++;
+    }
+
+    public void resetLoginAttempts() {
+        this.failedLoginAttempts = 0;
+    }
+
 
     // social methods
     public void addContact(String userId) {
@@ -96,12 +107,12 @@ public class User {
         return userId;
     }
 
-    public int getWrongPasswordCount() {
-        return wrongPasswordCount;
+    public long getLockUntil() {
+        return lockUntil;
     }
 
-    public long getBlockedUntil() {
-        return blockedUntil;
+    public int getFailedLoginAttempts() {
+        return failedLoginAttempts;
     }
 
     public long getLastSeen() {
@@ -147,12 +158,8 @@ public class User {
         this.number = number;
     }
 
-    public void setWrongPasswordCount(int wrongPasswordCount) {
-        this.wrongPasswordCount = wrongPasswordCount;
-    }
-
-    public void setBlockedUntil(long blockedUntil) {
-        this.blockedUntil = blockedUntil;
+    public void setLockUntil(long lockUntil) {
+        this.lockUntil = lockUntil;
     }
 
     public void setLastSeen(long lastSeen) {
@@ -189,8 +196,8 @@ public class User {
 
         private String userId;
 
-        private int wrongPasswordCount = 0;
-        private long blockedUntil = 0;
+        private long lockUntil = 0;
+        private int failedLoginAttempts=0;
 
         private String displayName;
         private String profileImage;
@@ -221,13 +228,13 @@ public class User {
             return this;
         }
 
-        public Builder wrongPasswordCount(int wrongPasswordCount) {
-            this.wrongPasswordCount = wrongPasswordCount;
+        public Builder lockUntil(long lockUntil) {
+            this.lockUntil = lockUntil;
             return this;
         }
 
-        public Builder blockedUntil(long blockedUntil) {
-            this.blockedUntil = blockedUntil;
+        public Builder failedLoginAttempts(int failedLoginAttempts){
+            this.failedLoginAttempts = failedLoginAttempts;
             return this;
         }
 

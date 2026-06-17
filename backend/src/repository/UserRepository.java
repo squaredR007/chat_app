@@ -1,9 +1,9 @@
 package repository;
 
 import model.User;
-
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class UserRepository {
 
@@ -14,7 +14,7 @@ public class UserRepository {
     }
 
     //save a user
-    public boolean addAUser(User user){
+    public boolean addUser(User user){
         if (user == null)
             return false;
         if (existsByUsername(user.getUsername()))
@@ -110,6 +110,6 @@ public class UserRepository {
 
     //getter
     public List<User> getUsers() {
-        return users;
+        return new ArrayList<>(users);
     }
 }

@@ -1,9 +1,14 @@
 package controller;
 
+import com.google.gson.JsonObject;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
 import service.SettingsService;
+import java.io.IOException;
 
-public class SettingsController {
-    private SettingsService settingsService; //access to the service
+public class SettingsController implements HttpHandler {
+
+    private final SettingsService settingsService; //access to the service
 
 
     //constructor
@@ -12,41 +17,157 @@ public class SettingsController {
     }
 
 
+    @Override
+    public void handle(HttpExchange exchange) throws IOException {
+        String path = exchange.getRequestURI().getPath();
+        String method = exchange.getRequestMethod();
+
+        try {
+            if (path.equals("/api/settings/changeNumber") && method.equals("POST")) {
+                handleChangeNumber(exchange);
+
+            } else if (path.equals("/api/settings/changeUsername") && method.equals("POST")) {
+                handleChangeUsername(exchange);
+
+            } else if (path.equals("/api/settings/changeBackground") && method.equals("POST")) {
+                handleChangeBackground(exchange);
+
+            } else if (path.equals("/api/settings/deleteAccount") && method.equals("POST")) {
+                handleDeleteAccount(exchange);
+
+            } else if (path.equals("/api/settings/changeProfileImage") && method.equals("POST")) {
+                handleChangeProfileImage(exchange);
+
+            } else if (path.equals("/api/settings/changeDisplayName") && method.equals("POST")) {
+                handleChangeDisplayName(exchange);
+
+            } else if (path.equals("/api/settings/changeBiography") && method.equals("POST")) {
+                handleChangeBiography(exchange);
+
+            } else if (path.equals("/api/settings/changeDarkMode") && method.equals("POST")) {
+                handleChangeDarkMode(exchange);
+
+            } else {
+                HttpUtils.sendError(exchange, 404, "Endpoint not found");
+            }
+
+        } catch (RuntimeException e) {
+            HttpUtils.sendError(exchange, 400, e.getMessage());
+        }
+    }
+
     //account change handle
-    public boolean changeNumber(String userId, String number){
-        return settingsService.changeNumber(userId, number);
+    private void handleChangeNumber(HttpExchange exchange) throws IOException {
+        JsonObject body = HttpUtils.readBody(exchange);
+
+        String userId = body.get("userId").getAsString();
+        String number = body.get("number").getAsString();
+
+        boolean result = settingsService.changeNumber(userId, number);
+
+        JsonObject response = new JsonObject();
+        response.addProperty("success", result);
+
+        HttpUtils.sendResponse(exchange, 200, response);
     }
 
-    public boolean changeUsername(String userId, String username){
-        return settingsService.changeUsername(userId, username);
+    private void handleChangeUsername(HttpExchange exchange) throws IOException {
+        JsonObject body = HttpUtils.readBody(exchange);
+
+        String userId = body.get("userId").getAsString();
+        String username = body.get("username").getAsString();
+
+        boolean result = settingsService.changeUsername(userId, username);
+
+        JsonObject response = new JsonObject();
+        response.addProperty("success", result);
+
+        HttpUtils.sendResponse(exchange, 200, response);
     }
 
-    public boolean changeBackground(String userId, String background){
-        return settingsService.changeBackground(userId, background);
+    private void handleChangeBackground(HttpExchange exchange) throws IOException {
+        JsonObject body = HttpUtils.readBody(exchange);
+
+        String userId = body.get("userId").getAsString();
+        String background = body.get("background").getAsString();
+
+        boolean result = settingsService.changeBackground(userId, background);
+
+        JsonObject response = new JsonObject();
+        response.addProperty("success", result);
+
+        HttpUtils.sendResponse(exchange, 200, response);
     }
 
-    public boolean deleteAccount(String userId){
-        return settingsService.deletedAccount(userId);
-    }
+    private void handleDeleteAccount(HttpExchange exchange) throws IOException {
+        JsonObject body = HttpUtils.readBody(exchange);
 
+        String userId = body.get("userId").getAsString();
+
+        boolean result = settingsService.deletedAccount(userId);
+
+        JsonObject response = new JsonObject();
+        response.addProperty("success", result);
+
+        HttpUtils.sendResponse(exchange, 200, response);
+    }
 
     //profile change handle
-    public boolean changeProfileImage(String userId, String profileImage){
-        return settingsService.changeProfileImage(userId, profileImage);
+    private void handleChangeProfileImage(HttpExchange exchange) throws IOException {
+        JsonObject body = HttpUtils.readBody(exchange);
+
+        String userId = body.get("userId").getAsString();
+        String profileImage = body.get("profileImage").getAsString();
+
+        boolean result = settingsService.changeProfileImage(userId, profileImage);
+
+        JsonObject response = new JsonObject();
+        response.addProperty("success", result);
+
+        HttpUtils.sendResponse(exchange, 200, response);
     }
 
-    public boolean changeDisplayName(String userId, String newName){
-        return settingsService.changeDisplayName(userId, newName);
+    private void handleChangeDisplayName(HttpExchange exchange) throws IOException {
+        JsonObject body = HttpUtils.readBody(exchange);
+
+        String userId = body.get("userId").getAsString();
+        String newName = body.get("newName").getAsString();
+
+        boolean result = settingsService.changeDisplayName(userId, newName);
+
+        JsonObject response = new JsonObject();
+        response.addProperty("success", result);
+
+        HttpUtils.sendResponse(exchange, 200, response);
     }
 
-    public boolean changeBiography(String userId, String biography){
-        return settingsService.changeBiography(userId, biography);
+    private void handleChangeBiography(HttpExchange exchange) throws IOException {
+        JsonObject body = HttpUtils.readBody(exchange);
+
+        String userId = body.get("userId").getAsString();
+        String biography = body.get("biography").getAsString();
+
+        boolean result = settingsService.changeBiography(userId, biography);
+
+        JsonObject response = new JsonObject();
+        response.addProperty("success", result);
+
+        HttpUtils.sendResponse(exchange, 200, response);
     }
 
 
     //chat change handle
-    public boolean changeDarkMode(String userId, boolean darkmode){
-        return settingsService.changeDarkMode(userId, darkmode);
-    }
+    private void handleChangeDarkMode(HttpExchange exchange) throws IOException {
+        JsonObject body = HttpUtils.readBody(exchange);
 
+        String userId = body.get("userId").getAsString();
+        boolean darkMode = body.get("darkmode").getAsBoolean();
+
+        boolean result = settingsService.changeDarkMode(userId, darkMode);
+
+        JsonObject response = new JsonObject();
+        response.addProperty("success", result);
+
+        HttpUtils.sendResponse(exchange, 200, response);
+    }
 }
