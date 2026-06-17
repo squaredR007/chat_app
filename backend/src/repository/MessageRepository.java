@@ -25,6 +25,20 @@ public class MessageRepository {
         return messagesByChatId.getOrDefault(chatId , new ArrayList<>()) ;
     }
 
+    //Returning all reported messages as a List(Used in Admins CLI)
+
+    public List<Message> findAllReported() {
+        List<Message> reported = new ArrayList<>();
+        for (List<Message> chatMessages : messagesByChatId.values()) {
+            for (Message m : chatMessages) {
+                if (m.isReported()) {
+                    reported.add(m);
+                }
+            }
+        }
+        return reported;
+    }
+
     // Finds a message by its id which was set in message class as a field
 
     public Message findById(String chatId , String messageId) {
