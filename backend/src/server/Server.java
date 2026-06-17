@@ -1,40 +1,52 @@
-package server;
+package server ;
 
 import com.sun.net.httpserver.HttpServer;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpExchange;
-
+import controller.ChatController;
+import controller.GroupController;
+import controller.AuthController;
+import controller.SettingsController;
+import repository.ChatRepository;
+import repository.GroupRepository;
+import repository.MessageRepository;
+import repository.UserRepository;
+import service.ChatService;
+import service.GroupService;
+import service.MessageService;
+import service.AuthService;
+import service.SettingsService;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 
 public class Server {
 
-    private static final int PORT = 8080;
+    private static final int PORT = 8080 ;
 
-    public static void main(String[] args) throws IOException {
-        HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
+    public static void main (String[] args) throws IOException{
+        //Repositories cause for phase 1 we use in-memory storage
+        ChatRepository chatRepository = new ChatRepository() ;
+        GroupRepository groupRepository = new GroupRepository() ;
+        MessageRepository messageRepository = new MessageRepository() ;
+        UserRepository userRepository = new UserRepository() ;
 
-        // Thread pool so multiple users can be handled at the same time
+        //Services (business logic)
+        ChatService chatService = new ChatService(chatRepository);
+        GroupService groupService = new GroupService(groupRepository , chatRepository);
+        MessageService messageService = new MessageService(messageRepository);
+        AuthService authService = new AuthService(userRepository);
+        SettingsService settingsService = new SettingsService(userRepository);
+
+        //Server set up using thread pool
+        HttpServer server = HttpServer.create(new InetSocketAddress(PORT) , 0) ;
         server.setExecutor(Executors.newFixedThreadPool(10));
 
-        // A simple test endpoint
-        server.createContext("/api/test", new TestHandler());
+        //Registering controllers
+        server.createContext("/api/chat", new ChatController(chatService, messageService));
+        server.createContext("/api/group", new GroupController(groupService));
+        server.createContext("/api/auth", new AuthController(authService));
+        server.createContext("/api/settings", new SettingsController(settingsService));
 
         server.start();
         System.out.println("Server started on port " + PORT);
-    }
-
-    // Simple handler class for testing
-    static class TestHandler implements HttpHandler {
-        @Override
-        public void handle(HttpExchange exchange) throws IOException {
-            String response = "Server is running!";
-            exchange.sendResponseHeaders(200, response.getBytes().length);
-            OutputStream os = exchange.getResponseBody();
-            os.write(response.getBytes());
-            os.close();
-        }
     }
 }

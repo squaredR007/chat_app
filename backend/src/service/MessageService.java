@@ -97,4 +97,10 @@ public class MessageService {
     public List<Message> getMessages (String chatId) {
         return messageRepository.findByChatId(chatId);
     }
+
+    //Getting all of the messages which were being reported
+
+    public List<Message> getReportedMessages() {
+        return messageRepository.findAllReported();
+    }
 }

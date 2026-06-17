@@ -25,6 +25,17 @@ public class GroupService {
         return groupChat ;
     }
 
+    //Deleting groups method which is used by Admin CLI
+
+    public void deleteGroup(String groupId, String chatId) {
+        Group group = groupRepository.findById(groupId);
+        if (group == null) {
+            throw new RuntimeException("Group not found");
+        }
+        groupRepository.delete(groupId);
+        chatRepository.delete(chatId);
+    }
+
     //Adding a new member to the group
 
     public void addMember(String groupId, String username) {
