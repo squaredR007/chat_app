@@ -1,7 +1,11 @@
-package cli;
+package CLI;
 
+import model.Group;
+import model.Message;
 import model.User;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 import repository.GroupRepository;
@@ -16,12 +20,17 @@ public class AdminCLI {
     private static final String adminUsername2="Zeinab";
     private static final String adminPassword="06Zein&Hane07";
 
+    //necessary fields for access
     private final UserRepository userRepository;
     private final GroupRepository groupRepository;
     private final GroupService groupService;
     private final MessageService messageService;
 
+    //read input
+    Scanner input=new Scanner(System.in);
 
+
+    //constructor
     public AdminCLI(UserRepository userRepository, GroupRepository groupRepository,GroupService groupService, MessageService messageService){
         this.userRepository=userRepository;
         this.groupRepository=groupRepository;
@@ -30,12 +39,24 @@ public class AdminCLI {
     }
 
 
+    //admin login check
     private boolean adminLogin(String username, String password) {
         if ((username.equals(adminUsername1) || username.equals(adminUsername2)) && password.equals(adminPassword))
             return true;
         return false;
     }
 
+    //admin login
+    public void start(){
+        System.out.println("please enter the admin username: ");
+        String adminUsername=input.next();
+        System.out.println("please enter the admin password: ");
+        String adminPassword=input.next();
+
+        menu(adminUsername, adminPassword);
+    }
+
+    //access menu
     public void menu(String username, String password){
         if (adminLogin(username, password)){
             int choice;
@@ -52,15 +73,17 @@ public class AdminCLI {
                         "9.list reported messages and sender user\n" +
                         "0.Exit");
                 System.out.println("enter the request number: ");
-                Scanner input=new Scanner(System.in);
                 choice= input.nextInt();
 
                 switch (choice){
                     case 0:
+                        System.out.println("you have successfully logged out.");
                         break;
 
                     case 1:
-                        System.out.println(userRepository.getUsers());
+                        System.out.println("List of users:");
+                        for (User user: userRepository.getUsers())
+                            System.out.println(user.getUsername());
                     break;
 
                     case 2:
@@ -75,18 +98,32 @@ public class AdminCLI {
                                 .password(password1)
                                 .number(number1)
                                 .build();
-                        userRepository.addUser(user1);
+                        if (userRepository.getByUsername(username1) == null) {
+                            userRepository.addUser(user1);
+                            System.out.println("user added successfully.");
+                        }
+                        else System.out.println("username already exists!");
                         break;
 
                     case 3:
                         System.out.println("enter the username: ");
                         String username2=input.next();
                         User user2= userRepository.getByUsername(username2);
+                        if (user2==null){
+                            System.out.println("User not found!");
+                            break;
+                        }
                         userRepository.deleteUserByUserId(user2.getUserId());
+                        System.out.println("user deleted successfully.");
                         break;
 
                     case 4:
-                        System.out.println(groupRepository.findALl()); //show member later
+                        for (Group group: groupRepository.findALl()) {
+                            System.out.println("group name: "+group.getGroupName());
+                            System.out.println("members:");
+                            for (String member: group.getMembersUsernames())
+                                System.out.println(member);
+                        }
                         break;
 
                     case 5:
@@ -99,33 +136,52 @@ public class AdminCLI {
                         System.out.println("enter the admin username: ");
                         String adminUsername1=input.next();
                         groupService.creatGroup(groupId1, chatId1, groupName1, adminUsername1);
+                        System.out.println("group created successfully.");
                         break;
 
                     case 6:
-                        //delete group
+                        System.out.println("enter the group id: ");
+                        String groupId2=input.next();
+                        System.out.println("enter the chat id: ");
+                        String chatId2=input.next();
+                        groupService.deleteGroup(groupId2, chatId2);
+                        System.out.println("group deleted successfully.");
                         break;
 
                     case 7:
                         System.out.println("enter the group id: ");
-                        String groupId2=input.next();
+                        String groupId3=input.next();
                         System.out.println("enter the username: ");
                         String username3=input.next();
-                        groupService.addMember(groupId2, username3);
+                        groupService.addMember(groupId3, username3);
+                        System.out.println("member added to the group successfully.");
                         break;
 
                     case 8:
                         System.out.println("enter the group id: ");
-                        String groupId3=input.next();
+                        String groupId4=input.next();
                         System.out.println("enter the username: ");
                         String username4=input.next();
-                        groupService.removeMember(groupId3, username4);
+                        groupService.removeMember(groupId4, username4);
+                        System.out.println("member removed from the group successfully.");
                         break;
 
                     case 9:
-                        //reports message
-                        break;
+                        List<Message> reportedMessages=messageService.getReportedMessages();
+                        for (Message message: reportedMessages){
+                            System.out.println("sender: "+message.getSenderUsername());
+                            System.out.println("message: "+message.getContent());
+                            System.out.println();
+                        }
+                    break;
+
+                    default:
+                        System.out.println("the entered value is invalid!");
                 }
             }while (choice !=0);
+        }
+        else {
+            System.out.println("the username or password is incorrect!");
         }
     }
 
