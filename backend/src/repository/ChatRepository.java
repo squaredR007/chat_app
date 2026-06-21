@@ -5,6 +5,7 @@ import java.util.ArrayList ;
 import java.util.HashMap ;
 import java.util.List ;
 import java.util.Map ;
+import java.util.concurrent.ConcurrentHashMap ;
 
 //used HashMap to store data in memory . It is temporary for phase1
 
@@ -12,7 +13,7 @@ public class ChatRepository {
 
     //The chat object can be stored here by using chatId as key
 
-   private Map<String , Chat> chats = new HashMap<>() ;
+   private Map<String , Chat> chats = new ConcurrentHashMap<>() ;
 
    //saving or editing a chat
 

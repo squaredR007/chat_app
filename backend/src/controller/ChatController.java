@@ -23,6 +23,11 @@ public class ChatController implements HttpHandler{
 
     @Override
     public void handle (HttpExchange exchange)throws IOException {
+        //handling CORS
+        if (exchange.getRequestMethod().equals("OPTIONS")) {
+            HttpUtils.handleCors(exchange);
+            return;
+        }
         String path = exchange.getRequestURI().getPath() ;
         String method = exchange.getRequestMethod() ;
         try {
@@ -119,4 +124,32 @@ public class ChatController implements HttpHandler{
         response.addProperty("status", "pinned");
         HttpUtils.sendResponse(exchange, 200, response);
     }
+
+//    / Reporting a message (admin can view reported messages via CLI)
+
+    private void handleReportMessage(HttpExchange exchange) throws IOException {
+        JsonObject body = HttpUtils.readBody(exchange);
+        String chatId = body.get("chatId").getAsString();
+        String messageId = body.get("messageId").getAsString();
+
+        messageService.reportMessage(chatId, messageId);
+
+        JsonObject response = new JsonObject();
+        response.addProperty("status", "message reported");
+        HttpUtils.sendResponse(exchange, 200, response);
+    }
+
+    // Polling for new messages since a given timestamp
+
+    private void handlePollMessages(HttpExchange exchange) throws IOException {
+        String query = exchange.getRequestURI().getQuery();
+        JsonObject queryParams = HttpUtils.parseQueryString(query);
+        String chatId = queryParams.get("chatId").getAsString();
+        long since = Long.parseLong(queryParams.get("since").getAsString());
+
+        List<Message> newMessages = messageService.getMessagesSince(chatId, since);
+        HttpUtils.sendResponse(exchange, 200, newMessages);
+    }
+
+
 }

@@ -16,8 +16,8 @@ import service.MessageService;
 public class AdminCLI {
 
     //admin information
-    private static final String adminUsername1="Reyhane";
-    private static final String adminUsername2="Zeinab";
+    private static final String GroupAdminUsername1="Reyhane";
+    private static final String GroupAdminUsername2="Zeinab";
     private static final String adminPassword="06Zein&Hane07";
 
     //necessary fields for access
@@ -41,7 +41,7 @@ public class AdminCLI {
 
     //admin login check
     private boolean adminLogin(String username, String password) {
-        if ((username.equals(adminUsername1) || username.equals(adminUsername2)) && password.equals(adminPassword))
+        if ((username.equals(GroupAdminUsername1) || username.equals(GroupAdminUsername2)) && password.equals(adminPassword))
             return true;
         return false;
     }

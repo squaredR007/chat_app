@@ -13,14 +13,14 @@ public class ChatService {
 
     //Creating a private chat between 2 users and save it
 
-    public static PrivateChat creatPrivateChat (String chatId , String user1 , String user2) {
+    public PrivateChat creatPrivateChat (String chatId , String user1 , String user2) {
         PrivateChat chat = new PrivateChat(chatId , user1 , user2) ;
         chatRepository.save(chat);
         return chat ;
     }
 
     //Creating saved messages
-    public static PrivateChat createSavedMessagesChat(String username) {
+    public PrivateChat createSavedMessagesChat(String username) {
         String savedChatId = "saved_" + username;
         return creatPrivateChat(savedChatId, username, username);
     }

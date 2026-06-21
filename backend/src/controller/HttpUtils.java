@@ -52,10 +52,23 @@ public class HttpUtils {
         String responseBody = gson.toJson(data);
         byte[] bytes = responseBody.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type");
         exchange.sendResponseHeaders(statusCode, bytes.length);
         OutputStream os = exchange.getResponseBody();
         os.write(bytes);
         os.close();
+    }
+
+    //Handling CORS
+
+    public static void handleCors(HttpExchange exchange) throws IOException {
+        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type");
+        exchange.sendResponseHeaders(204, -1);
+        exchange.close();
     }
 
     //Sending error

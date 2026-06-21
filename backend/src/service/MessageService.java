@@ -4,6 +4,7 @@ import model.Message ;
 import repository.MessageRepository ;
 
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List ;
 import java.util.UUID ;
 
@@ -90,6 +91,20 @@ public class MessageService {
         if (m == null)
             throw new RuntimeException("Message not found");
         m.markAsReported();
+    }
+
+    //Returning only new messages since a given timestamp
+    public List<Message> getMessagesSince(String chatId, long sinceTimestamp) {
+        List<Message> all = messageRepository.findByChatId(chatId);
+        List<Message> result = new ArrayList<>();
+        for (Message m : all) {
+            if (m.getTimestamp()
+                    .toInstant(java.time.ZoneOffset.UTC)
+                    .toEpochMilli() > sinceTimestamp) {
+                result.add(m);
+            }
+        }
+        return result;
     }
 
     //The following method returns all of the messages of specific chat as a list since they should be visible when you open a chat
