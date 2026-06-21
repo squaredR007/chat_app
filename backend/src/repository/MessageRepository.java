@@ -5,18 +5,19 @@ import java.util.ArrayList ;
 import java.util.HashMap ;
 import java.util.List ;
 import java.util.Map ;
+import java.util.concurrent.ConcurrentHashMap;
 
 // In this class we store messages of a specific chat but not in a single global list which is useful
 public class MessageRepository {
 
     //list of the messages belonging to that chat
-    private Map<String , List<Message>> messagesByChatId = new HashMap<>() ;
+    private Map<String , List<Message>> messagesByChatId = new ConcurrentHashMap<>(); ;
 
     //Adds a new message to the given chat's message list
 
     public void save(String chatId , Message message) {
         //* computeIfAbsent creates a new empty list automatically the first time
-        messagesByChatId.computeIfAbsent(chatId , k-> new ArrayList<>()).add(message);
+        messagesByChatId.computeIfAbsent(chatId, k -> new java.util.concurrent.CopyOnWriteArrayList<>()).add(message);
     }
 
     //Returns all of the messages for a given chat as a list

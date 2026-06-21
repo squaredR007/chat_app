@@ -9,9 +9,11 @@ public class AuthService {
     private static final int maxFailedAttempts = 5;//locked after 5 unsuccessful attempts
     private static final long lockDuration = (long) 5 * 60 * 1000;//lock for 5 minutes
     private UserRepository userRepository;
+    private ChatService chatService ;
 
-    public AuthService(UserRepository userRepository){
+    public AuthService(UserRepository userRepository , ChatService chatService){
         this.userRepository=userRepository;
+        this.chatService = chatService ;
     }
 
     //signup
@@ -30,10 +32,12 @@ public class AuthService {
 
         //create user and saved message
         User user=new User.Builder().username(username).password(password).number(number).failedLoginAttempts(0).lockUntil(0).build();
-        ChatService.createSavedMessagesChat(username);
+        boolean saved = userRepository.addUser(user) ;
 
-        //save user
-        return userRepository.addUser(user);
+        if (saved) {
+            chatService.createSavedMessagesChat(username) ;
+        }
+        return saved ;
     }
 
     //login
@@ -63,12 +67,10 @@ public class AuthService {
         //if the wrong password is entered
         if (!user.getPassword().equals(password)) {
             user.incrementFailedLoginAttempts();
-
-        //locking the account after unsuccessful login attempts
-        if (user.getFailedLoginAttempts() >= maxFailedAttempts) {
-            user.setLockUntil(now + lockDuration);
-        }
-         return false;
+            if (user.getFailedLoginAttempts() >= maxFailedAttempts) {
+                user.setLockUntil(now + lockDuration);
+            }
+            return false;
         }
 
         //successful status

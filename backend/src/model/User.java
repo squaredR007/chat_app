@@ -70,7 +70,7 @@ public class User {
 
     // social methods
     public void addContact(String userId) {
-        if (!contacts.contains(userId)) {
+        if (!contacts.contains(userId) && !this.userId.equals(userId)) {
             contacts.add(userId);
         }
     }

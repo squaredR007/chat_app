@@ -19,6 +19,11 @@ public class SettingsController implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
+        //handle CORS
+        if (exchange.getRequestMethod().equals("OPTIONS")) {
+            HttpUtils.handleCors(exchange);
+            return;
+        }
         String path = exchange.getRequestURI().getPath();
         String method = exchange.getRequestMethod();
 

@@ -16,6 +16,8 @@ public class SettingsService {
         User user= userRepository.getByUserId(userId);
         if (user==null || number==null)
             return false;
+        if (userRepository.existsByNumber(number))
+            return false;
         user.setNumber(number);
         return true;
     }
@@ -24,6 +26,8 @@ public class SettingsService {
         User user= userRepository.getByUserId(userId);
         if (user==null || username==null)
             return false;
+        if (userRepository.existsByUsername(username))
+            return false ;
         user.setUsername(username);
         return true;
     }

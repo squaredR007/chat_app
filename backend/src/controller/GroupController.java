@@ -19,6 +19,10 @@ public class GroupController implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
+        if (exchange.getRequestMethod().equals("OPTIONS")) {
+            HttpUtils.handleCors(exchange);
+            return;
+        }
         String path = exchange.getRequestURI().getPath();
         String method = exchange.getRequestMethod();
 

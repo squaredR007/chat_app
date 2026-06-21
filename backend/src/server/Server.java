@@ -5,6 +5,7 @@ import controller.ChatController;
 import controller.GroupController;
 import controller.AuthController;
 import controller.SettingsController;
+import controller.UserController ;
 import repository.ChatRepository;
 import repository.GroupRepository;
 import repository.MessageRepository;
@@ -33,7 +34,7 @@ public class Server {
         ChatService chatService = new ChatService(chatRepository);
         GroupService groupService = new GroupService(groupRepository , chatRepository);
         MessageService messageService = new MessageService(messageRepository);
-        AuthService authService = new AuthService(userRepository);
+        AuthService authService = new AuthService(userRepository , chatService);
         SettingsService settingsService = new SettingsService(userRepository);
 
         //Server set up using thread pool
@@ -45,6 +46,7 @@ public class Server {
         server.createContext("/api/group", new GroupController(groupService));
         server.createContext("/api/auth", new AuthController(authService));
         server.createContext("/api/settings", new SettingsController(settingsService));
+        server.createContext("/api/user", new UserController(userRepository));
 
         server.start();
         System.out.println("Server started on port " + PORT);

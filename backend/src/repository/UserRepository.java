@@ -4,13 +4,14 @@ import model.User;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class UserRepository {
 
     private List<User> users;
 
     public UserRepository(){
-        users=new ArrayList<>();
+        users = new CopyOnWriteArrayList<>();
     }
 
     //save a user
