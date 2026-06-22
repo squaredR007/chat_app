@@ -45,9 +45,6 @@ public class AuthService {
         if (username==null || password==null)
             return false;
 
-        if (!patternPassword(password))
-            return false;
-
         User user=userRepository.getByUsername(username);
         if (user==null)
             return false;

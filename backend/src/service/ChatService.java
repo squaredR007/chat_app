@@ -5,7 +5,7 @@ import repository.ChatRepository ;
 import java.util.List ;
 
 public class ChatService {
-    private static ChatRepository chatRepository ;
+    private ChatRepository chatRepository ;
 
     public ChatService(ChatRepository chatRepository) {
         this.chatRepository = chatRepository ;
