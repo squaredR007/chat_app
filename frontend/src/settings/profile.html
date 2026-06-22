@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>profile</title>
+</head>
+<body>
+
+<div class="settings-container">
+    <a href="../settings/settings.html" class="back-button">back</a>
+
+    <div class="profile-detail-container">
+        <div class="info-card">
+
+            <div class="info-row">
+                <span class="label">profile image</span>
+                <span id="text-profile-image" class="value-text">Profile image</span>
+                <input type="file" id="input-profile-image" class="value-input">
+            </div>
+
+            <div class="info-row">
+                <span class="label">display name</span>
+                <span id="text-displayname" class="value-text">display name</span>
+                <input type="text" id="input-displayname" class="value-input" value="display name">
+            </div>
+
+            <div class="info-row">
+                <span class="label">biography</span>
+                <span id="text-biography" class="value-text">biography</span>
+                <input type="text" id="input-biography" class="value-input" value="biography">
+            </div>
+
+            <div class="info-row">
+                <span class="label">background</span>
+                <span id="text-background" class="value-text">background</span>
+                <input type="file" id="input-background" class="value-input">
+            </div>
+
+        </div>
+
+        <button id="main-btn" class="edit-btn" onclick="toggleEdit()">edit</button>
+    </div>
+</div>
+
+</body>
+</html>
