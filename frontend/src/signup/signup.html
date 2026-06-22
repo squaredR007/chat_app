@@ -8,22 +8,31 @@
 
 <form class="main-form">
 
-  <h4 class="box-title" >username</h4>
-  <input type="text" class="input-box" placeholder="please enter the username">
+  <div>
+    <label for="username" class="box-title">username</label>
+    <input id="username" type="text" class="input-box" placeholder="Please enter your username">
+  </div>
 
-  <h4 class="box-title" >password</h4>
-  <input type="password" class="input-box" placeholder="please enter the password">
+  <div>
+    <label for="password" class="box-title">Password</label>
+    <input id="password" type="password" class="input-box" placeholder="Please enter your password">
+  </div>
 
-  <h4 class="box-title" >Repeat password</h4>
-  <input type="password" class="input-box" placeholder="Please repeat the password.">
+  <div>
+    <label for="repeatPassword" class="box-title">Password</label>
+    <input id="repeatPassword" type="password" class="input-box" placeholder="Please repeat the password">
+  </div>
 
-  <h4 class="box-title" >number</h4>
-  <input type="tel" name="phoneNumber" class="number" placeholder="Please enter the number.">
+
+  <div>
+    <label for="number" class="box-title">number</label>
+    <input id="number" type="tel" class="input-box" placeholder="Please enter your number">
+  </div>
 
   <button type="submit" class="submit-btn">sign up</button>
 
   <div class="bottom-text">Have you already created an account?</div>
-  <div class="bottom-text">login</div>
+  <a href="../login/login.html">login</a>
 
 </form>
 
