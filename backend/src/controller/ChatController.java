@@ -43,7 +43,12 @@ public class ChatController implements HttpHandler{
                 handleArchiveChat(exchange);
             } else if (path.equals("/api/chat/pin") && method.equals("POST")) {
                 handlePinChat(exchange);
-            } else {
+            } else if (path.equals("/api/chat/report") && method.equals("POST")) {
+                handleReportMessage(exchange);
+            } else if (path.equals("/api/chat/poll") && method.equals("GET")) {
+                handlePollMessages(exchange);
+            }
+            else {
                 HttpUtils.sendError(exchange, 404, "Endpoint not found");
             }
         } catch (RuntimeException e) {

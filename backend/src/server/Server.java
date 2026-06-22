@@ -18,6 +18,7 @@ import service.SettingsService;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
+import CLI.AdminCLI;
 
 public class Server {
 
@@ -49,6 +50,8 @@ public class Server {
         server.createContext("/api/user", new UserController(userRepository));
 
         server.start();
+        CLI.AdminCLI adminCLI = new CLI.AdminCLI(userRepository, groupRepository, groupService, messageService);
+        new Thread(() -> adminCLI.start()).start();
         System.out.println("Server started on port " + PORT);
     }
 }
