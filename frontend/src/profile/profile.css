@@ -1,0 +1,56 @@
+body{
+    font-family:'Segoe UI',sans-serif;
+    background:#fff0f5;
+    padding:40px;
+}
+
+.profile-container{
+    max-width:700px;
+    margin:auto;
+}
+
+.top-background{
+    height:220px;
+    background:linear-gradient(
+            135deg,
+            #ff85a1,
+            #ffb3c6
+    );
+    border-radius:25px 25px 0 0;
+}
+
+.profile-content{
+    background:white;
+    padding:30px;
+    text-align:center;
+    border-radius:0 0 25px 25px;
+}
+
+.avatar-wrapper{
+    margin-top:-90px;
+}
+
+.avatar{
+    width:140px;
+    height:140px;
+    border-radius:50%;
+    background:#ffd6e7;
+    border:6px solid white;
+}
+
+.display-name{
+    color:#ff85a1;
+    margin-top:15px;
+}
+
+.username{
+    color:#c4849a;
+}
+
+.info-item{
+    margin-top:15px;
+    padding:15px;
+    background:#fff8fb;
+    border-radius:15px;
+    text-align:left;
+}
