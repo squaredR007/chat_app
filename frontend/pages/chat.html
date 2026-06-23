@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatApp — Chat</title>
+    <link rel="stylesheet" href="../css/chat.css">
+</head>
+<body>
+
+<div class="chat-container">
+
+    <!-- HEADER -->
+    <header class="chat-header">
+        <a href="home.html" class="back-btn" title="Back">&#8592;</a>
+
+        <div class="header-info" id="headerInfo">
+            <div class="header-avatar" id="headerAvatar">?</div>
+            <div class="header-text">
+                <div class="header-name" id="headerName">Loading...</div>
+                <div class="header-status" id="headerStatus">...</div>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <button class="icon-btn" id="searchToggleBtn" title="Search messages">🔍</button>
+        </div>
+    </header>
+
+    <!-- SEARCH BAR (hidden by default) -->
+    <div class="message-search-bar" id="messageSearchBar" style="display:none;">
+        <input type="text" id="messageSearchInput" placeholder="Search in messages..." />
+        <button id="closeSearchBtn">✕</button>
+    </div>
+
+    <!-- MESSAGES AREA -->
+    <div class="messages-area" id="messagesArea">
+        <div class="loading">Loading messages...</div>
+    </div>
+
+    <!-- INPUT AREA -->
+    <div class="input-area">
+        <label class="attach-btn" title="Attach file">
+            📎
+            <input type="file" id="fileInput" style="display:none;" />
+        </label>
+        <input
+            type="text"
+            id="messageInput"
+            placeholder="Type a message..."
+            autocomplete="off"
+        />
+        <button class="send-btn" id="sendBtn" title="Send">&#10148;</button>
+    </div>
+
+</div>
+
+<!-- EDIT MESSAGE DIALOG -->
+<div class="dialog-overlay" id="editDialog" style="display:none;">
+    <div class="dialog">
+        <h3>Edit Message</h3>
+        <textarea id="editInput" rows="3"></textarea>
+        <div class="dialog-actions">
+            <button class="dialog-btn cancel" id="editCancelBtn">Cancel</button>
+            <button class="dialog-btn confirm" id="editConfirmBtn">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- DELETE MESSAGE DIALOG -->
+<div class="dialog-overlay" id="deleteDialog" style="display:none;">
+    <div class="dialog">
+        <h3>Delete Message</h3>
+        <p>Are you sure you want to delete this message? It will still be visible in history.</p>
+        <div class="dialog-actions">
+            <button class="dialog-btn cancel" id="deleteCancelBtn">Cancel</button>
+            <button class="dialog-btn confirm danger" id="deleteConfirmBtn">Delete</button>
+        </div>
+    </div>
+</div>
+
+<script src="../js/chat.js"></script>
+</body>
+</html>

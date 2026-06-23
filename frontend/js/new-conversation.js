@@ -1,0 +1,280 @@
+// ── Config ──
+const API_BASE = "http://localhost:8080/api";
+
+// ── Read logged-in user from localStorage ──
+const currentUsername = localStorage.getItem("username");
+const currentUserId = localStorage.getItem("userId");
+
+if (!currentUsername || !currentUserId) {
+    window.location.href = "login.html";
+}
+
+// ── Apply saved theme ──
+if (localStorage.getItem("theme") === "dark") {
+    document.body.classList.add("dark");
+}
+
+// ── DOM References ──
+const contactList = document.getElementById("contactList");
+const contactSearchInput = document.getElementById("contactSearchInput");
+const privateFeedback = document.getElementById("privateFeedback");
+const groupFeedback = document.getElementById("groupFeedback");
+const memberChips = document.getElementById("memberChips");
+const groupMemberInput = document.getElementById("groupMemberInput");
+
+// ── State ──
+let groupMembers = [currentUsername]; // admin is always a member
+let allContacts = [];
+
+// ── Tab switching ──
+function switchTab(tab) {
+    // Hide all content
+    document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
+    document.querySelectorAll(".tab").forEach(el => el.classList.remove("active"));
+
+    // Show selected
+    document.getElementById(`content${capitalize(tab)}`).classList.remove("hidden");
+    document.getElementById(`tab${capitalize(tab)}`).classList.add("active");
+
+    // Load contacts when that tab is opened
+    if (tab === "contacts") loadContacts();
+}
+
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// ── PRIVATE CHAT ──
+document.getElementById("startPrivateChatBtn").addEventListener("click", async () => {
+    const targetUsername = document.getElementById("privateChatUsername").value.trim();
+
+    if (!targetUsername) {
+        showFeedback(privateFeedback, "Please enter a username.", "error");
+        return;
+    }
+
+    if (targetUsername === currentUsername) {
+        showFeedback(privateFeedback, "You can't chat with yourself! (Use Saved Messages instead 💌)", "error");
+        return;
+    }
+
+    // Generate a consistent chatId from both usernames (sorted so it's the same regardless of who initiates)
+    const sorted = [currentUsername, targetUsername].sort();
+    const chatId = `private_${sorted[0]}_${sorted[1]}`;
+
+    try {
+        const response = await fetch(`${API_BASE}/chat/create`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                chatId: chatId,
+                user1: currentUsername,
+                user2: targetUsername
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.status === "chat created" || data.error === undefined) {
+            showFeedback(privateFeedback, "Chat created! Redirecting... 💬", "success");
+            setTimeout(() => {
+                window.location.href = `chat.html?chatId=${chatId}`;
+            }, 800);
+        } else {
+            showFeedback(privateFeedback, data.error || "Something went wrong.", "error");
+        }
+    } catch (err) {
+        // If chat already exists, just navigate to it
+        showFeedback(privateFeedback, "Opening chat... 💬", "success");
+        setTimeout(() => {
+            window.location.href = `chat.html?chatId=${chatId}`;
+        }, 800);
+        console.error("Chat create error:", err);
+    }
+});
+
+// ── GROUP CREATION ──
+
+// Add member to the pending group member list
+document.getElementById("addMemberToListBtn").addEventListener("click", () => {
+    addMemberToList();
+});
+
+groupMemberInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") addMemberToList();
+});
+
+function addMemberToList() {
+    const username = groupMemberInput.value.trim();
+    if (!username) return;
+
+    if (groupMembers.includes(username)) {
+        groupMemberInput.value = "";
+        return;
+    }
+
+    groupMembers.push(username);
+    groupMemberInput.value = "";
+    renderMemberChips();
+}
+
+function renderMemberChips() {
+    memberChips.innerHTML = "";
+    groupMembers.forEach(username => {
+        const isAdmin = username === currentUsername;
+        const chip = document.createElement("div");
+        chip.className = "chip";
+        chip.innerHTML = `
+            <div class="chip-avatar">${username.charAt(0).toUpperCase()}</div>
+            <span>${username}${isAdmin ? " 👑" : ""}</span>
+            ${!isAdmin ? `<button class="chip-remove" onclick="removeMember('${username}')">✕</button>` : ""}
+        `;
+        memberChips.appendChild(chip);
+    });
+}
+
+function removeMember(username) {
+    groupMembers = groupMembers.filter(m => m !== username);
+    renderMemberChips();
+}
+
+// Create the group
+document.getElementById("createGroupBtn").addEventListener("click", async () => {
+    const groupName = document.getElementById("groupName").value.trim();
+
+    if (!groupName) {
+        showFeedback(groupFeedback, "Please enter a group name.", "error");
+        return;
+    }
+
+    if (groupMembers.length < 2) {
+        showFeedback(groupFeedback, "Add at least one other member to create a group.", "error");
+        return;
+    }
+
+    // Generate unique ids
+    const groupId = `group_${Date.now()}`;
+    const chatId = `gchat_${Date.now()}`;
+
+    try {
+        // Step 1: Create the group
+        const groupResponse = await fetch(`${API_BASE}/group/create`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                groupId: groupId,
+                chatId: chatId,
+                groupName: groupName,
+                adminUsername: currentUsername
+            })
+        });
+
+        const groupData = await groupResponse.json();
+
+        if (groupData.status !== "group created") {
+            showFeedback(groupFeedback, groupData.error || "Failed to create group.", "error");
+            return;
+        }
+
+        // Step 2: Add each member (skip admin, already added by GroupService)
+        const membersToAdd = groupMembers.filter(m => m !== currentUsername);
+        for (const member of membersToAdd) {
+            await fetch(`${API_BASE}/group/addMember`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    groupId: groupId,
+                    username: member
+                })
+            });
+        }
+
+        showFeedback(groupFeedback, `Group "${groupName}" created! Redirecting... 🎀`, "success");
+        setTimeout(() => {
+            window.location.href = `group-chat.html?chatId=${chatId}`;
+        }, 900);
+
+    } catch (err) {
+        showFeedback(groupFeedback, "Could not connect to server.", "error");
+        console.error("Group create error:", err);
+    }
+});
+
+// ── CONTACTS TAB ──
+async function loadContacts() {
+    contactList.innerHTML = `<div class="empty-state">Loading...</div>`;
+
+    try {
+        // Fetch all chats to find existing private chats
+        // (contacts = users we already have private chats with)
+        const response = await fetch(`${API_BASE}/chat/list`);
+        const chats = await response.json();
+
+        // Filter private chats involving current user
+        const privateChats = chats.filter(c =>
+            c.user1Username && c.user2Username &&
+            (c.user1Username === currentUsername || c.user2Username === currentUsername) &&
+            !c.chatId.startsWith("saved_")
+        );
+
+        allContacts = privateChats.map(c => ({
+            username: c.user1Username === currentUsername ? c.user2Username : c.user1Username,
+            chatId: c.chatId
+        }));
+
+        renderContacts(allContacts);
+
+    } catch (err) {
+        contactList.innerHTML = `<div class="empty-state">Could not load contacts.<br>Make sure the server is running.</div>`;
+        console.error("Failed to load contacts:", err);
+    }
+}
+
+function renderContacts(contacts) {
+    if (contacts.length === 0) {
+        contactList.innerHTML = `<div class="empty-state">No contacts yet.<br>Start a new private chat to add someone! 💌</div>`;
+        return;
+    }
+
+    contactList.innerHTML = "";
+    contacts.forEach(contact => {
+        const item = document.createElement("a");
+        item.href = `chat.html?chatId=${contact.chatId}`;
+        item.className = "contact-item";
+        item.innerHTML = `
+            <div class="contact-avatar">${contact.username.charAt(0).toUpperCase()}</div>
+            <div>
+                <div class="contact-name">${contact.username}</div>
+                <div class="contact-username">@${contact.username}</div>
+            </div>
+        `;
+        contactList.appendChild(item);
+    });
+}
+
+// Contact search filter
+contactSearchInput.addEventListener("input", () => {
+    const query = contactSearchInput.value.trim().toLowerCase();
+    if (!query) {
+        renderContacts(allContacts);
+        return;
+    }
+    const filtered = allContacts.filter(c => c.username.toLowerCase().includes(query));
+    renderContacts(filtered);
+});
+
+// ── Feedback helper ──
+function showFeedback(el, message, type) {
+    el.textContent = message;
+    el.className = `feedback ${type}`;
+    // Auto-clear after 4 seconds
+    setTimeout(() => {
+        if (el.textContent === message) {
+            el.textContent = "";
+            el.className = "feedback";
+        }
+    }, 4000);
+}
+
+// ── Init: render current user chip ──
+renderMemberChips();
