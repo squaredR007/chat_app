@@ -12,11 +12,50 @@ function toggleEdit(){
     });
 }
 
-function confirmDelete(){
-
-    const answer= confirm("Are you sure you want to delete your account?");
-    if(answer){
-        alert("Account deleted");
+async function changeUsername(){
+    if (!userId){
+        window.location.href="../login/login.html";
+        return;
     }
 
+    const userId =localStorage.getItem("userId");
+    const username =document.getElementById("input-username").value;
+    const response =await fetch("http://localhost:8080/api/settings/changeUsername",
+            {
+                method:"POST",
+                body:JSON.stringify({userId, username})
+            }
+        );
+
+    alert(await response.json().success);
+}
+
+async function changeNumber(){
+
+    const userId =localStorage.getItem("userId");
+    const number =document.getElementById("input-number").value;
+    const response =await fetch("http://localhost:8080/api/settings/changeNumber",
+            {
+                method:"POST",
+                body:JSON.stringify({userId,number})
+            }
+        );
+
+    alert(await response.json().success);
+}
+
+async function deleteAccount(){
+
+    const userId =localStorage.getItem("userId");
+    const response =await fetch("http://localhost:8080/api/settings/deleteAccount",
+            {
+                method:"POST",
+                body:JSON.stringify({userId})
+            }
+        );
+
+        if(await response.json().success){
+        alert("Account deleted");
+
+    }
 }
