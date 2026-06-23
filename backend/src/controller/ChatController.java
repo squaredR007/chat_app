@@ -47,8 +47,11 @@ public class ChatController implements HttpHandler{
                 handleReportMessage(exchange);
             } else if (path.equals("/api/chat/poll") && method.equals("GET")) {
                 handlePollMessages(exchange);
-            }
-            else {
+            } else if (path.equals("/api/chat/edit") && method.equals("POST")) {
+                handleEditMessage(exchange);
+            } else if (path.equals("/api/chat/delete") && method.equals("POST")) {
+                handleDeleteMessage(exchange);
+            } else {
                 HttpUtils.sendError(exchange, 404, "Endpoint not found");
             }
         } catch (RuntimeException e) {
@@ -154,6 +157,34 @@ public class ChatController implements HttpHandler{
 
         List<Message> newMessages = messageService.getMessagesSince(chatId, since);
         HttpUtils.sendResponse(exchange, 200, newMessages);
+    }
+
+    // Editing a message which saves previous content for history
+    private void handleEditMessage(HttpExchange exchange) throws IOException {
+        JsonObject body = HttpUtils.readBody(exchange);
+        String chatId = body.get("chatId").getAsString();
+        String messageId = body.get("messageId").getAsString();
+        String newContent = body.get("newContent").getAsString();
+
+        messageService.editMessage(chatId, messageId, newContent);
+
+        JsonObject response = new JsonObject();
+        response.addProperty("status", "message edited");
+        HttpUtils.sendResponse(exchange, 200, response);
+    }
+
+    // Deleting a message which keeps it visible in history
+    private void handleDeleteMessage(HttpExchange exchange) throws IOException {
+        JsonObject body = HttpUtils.readBody(exchange);
+        String chatId = body.get("chatId").getAsString();
+        String messageId = body.get("messageId").getAsString();
+        String requestingUsername = body.get("requestingUsername").getAsString();
+
+        messageService.deleteMessage(chatId, messageId, requestingUsername);
+
+        JsonObject response = new JsonObject();
+        response.addProperty("status", "message deleted");
+        HttpUtils.sendResponse(exchange, 200, response);
     }
 
 
