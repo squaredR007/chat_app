@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatApp — Home</title>
+    <link rel="stylesheet" href="../css/home.css">
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar">
+
+        <!-- Current user avatar + settings button -->
+        <div class="sidebar-header">
+            <div class="avatar" id="currentUserAvatar">?</div>
+            <span class="app-title">ChatApp</span>
+            <button class="icon-btn" id="themeToggle" title="Toggle theme">🌙</button>
+            <a href="settings.html" class="icon-btn" title="Settings">⚙️</a>
+        </div>
+
+        <!-- Search bar -->
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search conversations..." />
+        </div>
+
+        <!-- Chat list -->
+        <div class="chat-list" id="chatList">
+            <!-- Populated by home.js -->
+            <div class="loading">Loading chats...</div>
+        </div>
+
+        <!-- New conversation button -->
+        <a href="new-conversation.html" class="new-chat-btn" title="New Conversation">＋</a>
+
+    </aside>
+
+    <!-- MAIN AREA (shown when no chat is selected) -->
+    <main class="main-area">
+        <div class="welcome">
+            <div class="welcome-icon">💬</div>
+            <h2>Welcome to ChatApp</h2>
+            <p>Select a conversation to start chatting</p>
+        </div>
+    </main>
+
+</div>
+
+<script src="../js/home.js"></script>
+</body>
+</html>

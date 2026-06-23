@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatApp — New Conversation</title>
+    <link rel="stylesheet" href="../css/new-conversation.css">
+</head>
+<body>
+
+<div class="page-container">
+
+    <!-- HEADER -->
+    <header class="page-header">
+        <a href="home.html" class="back-btn">&#8592;</a>
+        <h1 class="page-title">New Conversation</h1>
+    </header>
+
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab active" id="tabPrivate" onclick="switchTab('private')">
+            💬 Private Chat
+        </button>
+        <button class="tab" id="tabGroup" onclick="switchTab('group')">
+            👥 New Group
+        </button>
+        <button class="tab" id="tabContacts" onclick="switchTab('contacts')">
+            📋 Contacts
+        </button>
+    </div>
+
+    <!-- ── PRIVATE CHAT TAB ── -->
+    <div class="tab-content" id="contentPrivate">
+        <p class="tab-description">Start a private chat by entering the other person's username.</p>
+
+        <div class="input-group">
+            <label>Username</label>
+            <input
+                type="text"
+                id="privateChatUsername"
+                placeholder="Enter username..."
+                autocomplete="off"
+            />
+        </div>
+
+        <button class="pink-btn full-width" id="startPrivateChatBtn">
+            Start Chat ✨
+        </button>
+
+        <div class="feedback" id="privateFeedback"></div>
+    </div>
+
+    <!-- ── NEW GROUP TAB ── -->
+    <div class="tab-content hidden" id="contentGroup">
+        <p class="tab-description">Create a new group and add members.</p>
+
+        <div class="input-group">
+            <label>Group Name</label>
+            <input
+                type="text"
+                id="groupName"
+                placeholder="e.g. Study Buddies 🌸"
+                autocomplete="off"
+            />
+        </div>
+
+        <div class="input-group">
+            <label>Add Members <span class="hint">(add one by one)</span></label>
+            <div class="add-row">
+                <input
+                    type="text"
+                    id="groupMemberInput"
+                    placeholder="Enter username..."
+                    autocomplete="off"
+                />
+                <button class="outline-btn" id="addMemberToListBtn">Add</button>
+            </div>
+        </div>
+
+        <!-- Member chips -->
+        <div class="member-chips" id="memberChips">
+            <!-- Chips appear here as members are added -->
+        </div>
+
+        <button class="pink-btn full-width" id="createGroupBtn">
+            Create Group 🎀
+        </button>
+
+        <div class="feedback" id="groupFeedback"></div>
+    </div>
+
+    <!-- ── CONTACTS TAB ── -->
+    <div class="tab-content hidden" id="contentContacts">
+        <p class="tab-description">Your contacts. Click one to open their chat.</p>
+
+        <div class="search-row">
+            <input
+                type="text"
+                id="contactSearchInput"
+                placeholder="Search contacts..."
+            />
+        </div>
+
+        <div class="contact-list" id="contactList">
+            <div class="empty-state">Loading contacts...</div>
+        </div>
+    </div>
+
+</div>
+
+<script src="../js/new-conversation.js"></script>
+</body>
+</html>
