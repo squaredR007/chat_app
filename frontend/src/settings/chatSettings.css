@@ -1,0 +1,46 @@
+body{
+    font-family:'Segoe UI',sans-serif;
+    background:#fff0f5;
+    padding:40px;
+}
+
+.profile-detail-container{
+    background:white;
+    padding:25px;
+    border-radius:20px;
+    max-width:500px;
+    margin:auto;
+}
+
+.info-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.label{
+    color:#ff85a1;
+    font-weight:600;
+}
+
+#checkbox-dark-mode{
+    width:40px;
+    height:20px;
+    accent-color:#ff85a1;
+}
+
+.edit-btn{
+    width:100%;
+    margin-top:20px;
+    padding:12px;
+    border:none;
+    border-radius:12px;
+    background:#ff85a1;
+    color:white;
+}
+
+.back-button{
+    display:inline-block;
+    margin-bottom:15px;
+    color:#ff85a1;
+}
