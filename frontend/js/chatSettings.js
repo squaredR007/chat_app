@@ -1,27 +1,65 @@
-const checkbox =document.getElementById("checkbox-dark-mode");
+document.addEventListener("DOMContentLoaded", () => {
 
-checkbox.addEventListener("change",function(){
-        if(this.checked){
+    const checkbox = document.getElementById("checkbox-dark-mode");
+
+    const savedTheme = localStorage.getItem("theme");
+
+    if (savedTheme === "dark") {
+
         document.body.classList.add("dark");
-        }else{
-            document.body.classList.remove("dark");
+
+        if (checkbox) {
+            checkbox.checked = true;
         }
+
     }
-);
 
-async function saveTheme(){
+    if (checkbox) {
 
-    const userId =localStorage.getItem("userId");
-    const darkmode =document.getElementById("checkbox-dark-mode").checked;
+        checkbox.addEventListener("change", function () {
 
-    const response =await fetch("http://localhost:8080/api/settings/changeDarkMode",
-            {
-                method:"POST",
-                body:JSON.stringify({userId,darkmode})
-            }
-        );
+            const isDark = this.checked;
 
-    console.log(await response.json());
+            document.body.classList.toggle("dark", isDark);
+
+            localStorage.setItem(
+                "theme",
+                isDark ? "dark" : "light"
+            );
+
+            saveTheme(isDark);
+
+        });
+
+    }
+
+});
+
+async function saveTheme(isDark) {
+
+    const userId = localStorage.getItem("userId");
+
+    if (!userId) return;
+
+    try {
+
+        const response = await fetch("http://localhost:8080/api/settings/changeDarkMode", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                userId,
+                darkmode: isDark
+            })
+        });
+
+        console.log(await response.json());
+
+    } catch (err) {
+
+        console.error(err);
+
+    }
+
 }
-
-document.body.classList.toggle("dark", darkmode);
