@@ -1,10 +1,9 @@
 body{
     font-family:'Segoe UI',sans-serif;
     background:#fff0f5;
+    color:#4a2035;
     padding:40px;
 }
-
-
 
 .profile-detail-container{
     background:white;
@@ -12,6 +11,7 @@ body{
     border-radius:20px;
     max-width:600px;
     margin:auto;
+    box-shadow:0 4px 15px rgba(255,182,213,.2);
 }
 
 .info-row{
@@ -22,6 +22,7 @@ body{
     display:block;
     color:#ff85a1;
     margin-bottom:6px;
+    font-weight:600;
 }
 
 .value-input{
@@ -29,6 +30,13 @@ body{
     padding:12px;
     border:1px solid #ffd6e7;
     border-radius:12px;
+    background:#fff8fb;
+    color:#4a2035;
+}
+
+.value-input:focus{
+    outline:none;
+    border-color:#ff85a1;
 }
 
 .edit-btn{
@@ -39,6 +47,7 @@ body{
     border-radius:12px;
     background:#ff85a1;
     color:white;
+    cursor:pointer;
 }
 
 .delete-btn{
@@ -49,20 +58,67 @@ body{
     border-radius:12px;
     background:#ff5c8a;
     color:white;
+    cursor:pointer;
 }
 
-.back-btn {
-    text-decoration: none;
-    color: #ffffff;
-    font-size: 22px;
-    padding: 4px 8px;
-    border-radius: 50%;
-    transition: background 0.2s;
-    line-height: 1;
-    display: flex;
-    align-items: center;
+.back-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    text-decoration:none;
+    background:#ff85a1;
+    color:white;
+    font-size:18px;
+    transition:.2s;
+    box-shadow:0 2px 8px rgba(255,133,161,.35);
 }
 
-.back-btn:hover {
-    background: rgba(255,255,255,0.25);
+.back-btn:hover{
+    transform:scale(1.08);
+    background:#ff4d79;
+}
+
+/* DARK MODE */
+
+body.dark{
+    background:#2d1a24;
+    color:#f5c2d4;
+}
+
+body.dark .profile-detail-container{
+    background:#3d1a2e;
+    box-shadow:0 4px 15px rgba(0,0,0,.3);
+}
+
+body.dark .label{
+    color:#ffb3c6;
+}
+
+body.dark .value-input{
+    background:#2d1a24;
+    border-color:#6b2d4a;
+    color:#f5c2d4;
+}
+
+body.dark .value-input::placeholder{
+    color:#8b5567;
+}
+
+body.dark .edit-btn{
+    background:#b33d60;
+}
+
+body.dark .delete-btn{
+    background:#8b2d4a;
+}
+
+body.dark .back-btn{
+    background:#b33d60;
+}
+
+body.dark .back-btn:hover{
+    background:#ff85a1;
 }

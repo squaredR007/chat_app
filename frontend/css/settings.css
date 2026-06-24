@@ -2,6 +2,7 @@ body{
     font-family:'Segoe UI',sans-serif;
     background:#fff0f5;
     padding:40px;
+    color:#4a2035;
 }
 
 .settings-container{
@@ -13,6 +14,7 @@ body{
     background:white;
     border-radius:20px;
     padding:20px;
+    box-shadow:0 4px 15px rgba(255,182,213,.2);
 }
 
 .settings-item{
@@ -36,18 +38,36 @@ body{
     color:white;
 }
 
-.back-btn {
-    text-decoration: none;
-    color: #ffffff;
-    font-size: 22px;
-    padding: 4px 8px;
-    border-radius: 50%;
-    transition: background 0.2s;
-    line-height: 1;
-    display: flex;
-    align-items: center;
+.back-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    text-decoration:none;
+    background:#ff85a1;
+    color:white;
 }
 
-.back-btn:hover {
-    background: rgba(255,255,255,0.25);
+body.dark{
+    background:#2d1a24;
+    color:#f5c2d4;
+}
+
+body.dark .settings-list{
+    background:#3d1a2e;
+}
+
+body.dark .settings-item{
+    background:#4a2035;
+}
+
+body.dark .settings-item a{
+    color:#f5c2d4;
+}
+
+body.dark .logout-button,
+body.dark .back-btn{
+    background:#b33d60;
 }
