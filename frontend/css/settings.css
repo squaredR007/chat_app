@@ -1,0 +1,73 @@
+body{
+    font-family:'Segoe UI',sans-serif;
+    background:#fff0f5;
+    padding:40px;
+    color:#4a2035;
+}
+
+.settings-container{
+    max-width:500px;
+    margin:auto;
+}
+
+.settings-list{
+    background:white;
+    border-radius:20px;
+    padding:20px;
+    box-shadow:0 4px 15px rgba(255,182,213,.2);
+}
+
+.settings-item{
+    padding:15px;
+    margin-bottom:10px;
+    border-radius:12px;
+    background:#fff8fb;
+}
+
+.settings-item a{
+    text-decoration:none;
+    color:#4a2035;
+}
+
+.logout-button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:12px;
+    background:#ff85a1;
+    color:white;
+}
+
+.back-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    text-decoration:none;
+    background:#ff85a1;
+    color:white;
+}
+
+body.dark{
+    background:#2d1a24;
+    color:#f5c2d4;
+}
+
+body.dark .settings-list{
+    background:#3d1a2e;
+}
+
+body.dark .settings-item{
+    background:#4a2035;
+}
+
+body.dark .settings-item a{
+    color:#f5c2d4;
+}
+
+body.dark .logout-button,
+body.dark .back-btn{
+    background:#b33d60;
+}
