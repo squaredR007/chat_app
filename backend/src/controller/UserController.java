@@ -34,6 +34,8 @@ public class UserController implements HttpHandler {
                 handleUnblockUser(exchange);
             } else if (path.equals("/api/user/addContact") && method.equals("POST")) {
                 handleAddContact(exchange);
+            } else if (path.equals("/api/user/info") && method.equals("GET")) {
+                handleGetUserInfo(exchange);
             } else {
                 HttpUtils.sendError(exchange, 404, "Endpoint not found");
             }
@@ -84,6 +86,30 @@ public class UserController implements HttpHandler {
 
         JsonObject response = new JsonObject();
         response.addProperty("success", true);
+        HttpUtils.sendResponse(exchange, 200, response);
+    }
+
+    // Returns basic public profile info for a user
+    private void handleGetUserInfo(HttpExchange exchange) throws IOException {
+        String query = exchange.getRequestURI().getQuery();
+        JsonObject params = HttpUtils.parseQueryString(query);
+        String userId = params.get("userId").getAsString();
+
+        User user = userRepository.getByUserId(userId);
+        if (user == null) {
+            HttpUtils.sendError(exchange, 404, "User not found");
+            return;
+        }
+
+        //Response
+        JsonObject response = new JsonObject();
+        response.addProperty("username", user.getUsername());
+        response.addProperty("displayName", user.getDisplayName() != null ? user.getDisplayName() : "");
+        response.addProperty("biography", user.getBiography() != null ? user.getBiography() : "");
+        response.addProperty("number", user.getNumber() != null ? user.getNumber() : "");
+        response.addProperty("profileImage", user.getProfileImage() != null ? user.getProfileImage() : "");
+        response.addProperty("lastSeen", user.getLastSeen());
+
         HttpUtils.sendResponse(exchange, 200, response);
     }
 }
