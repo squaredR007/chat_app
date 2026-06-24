@@ -10,10 +10,10 @@
 
 <div class="chat-wrapper">
 
-    <!-- MAIN CHAT AREA -->
+    <!-- main chat area -->
     <div class="chat-container" id="chatContainer">
 
-        <!-- HEADER -->
+        <!-- header -->
         <header class="chat-header">
             <a href="home.html" class="back-btn">&#8592;</a>
 
@@ -32,18 +32,18 @@
             </div>
         </header>
 
-        <!-- MESSAGE SEARCH BAR (hidden by default) -->
+        <!-- message search bar -->
         <div class="message-search-bar" id="messageSearchBar" style="display:none;">
             <input type="text" id="messageSearchInput" placeholder="Search in messages..." />
             <button id="closeSearchBtn">✕</button>
         </div>
 
-        <!-- MESSAGES AREA -->
+        <!-- message area -->
         <div class="messages-area" id="messagesArea">
             <div class="loading">Loading messages...</div>
         </div>
 
-        <!-- INPUT AREA -->
+        <!-- input area -->
         <div class="input-area">
             <label class="attach-btn" title="Attach file">
                 📎
@@ -60,7 +60,7 @@
 
     </div>
 
-    <!-- GROUP INFO PANEL (slides in from right) -->
+    <!-- group info panel -->
     <div class="info-panel" id="infoPanel">
 
         <div class="info-panel-header">
@@ -68,7 +68,7 @@
             <button class="icon-btn" id="closePanelBtn">✕</button>
         </div>
 
-        <!-- Group avatar + name -->
+        <!-- group avatar and name -->
         <div class="info-group-hero">
             <div class="info-group-avatar" id="infoGroupAvatar">G</div>
             <div class="info-group-name" id="infoGroupName">Group Name</div>
@@ -80,7 +80,6 @@
 
         <!-- Member list -->
         <div class="member-list" id="memberList">
-            <!-- Populated by JS -->
         </div>
 
         <!-- Add member (only visible if current user is admin) -->
@@ -98,7 +97,7 @@
 
 </div>
 
-<!-- EDIT MESSAGE DIALOG -->
+<!-- edit message -->
 <div class="dialog-overlay" id="editDialog" style="display:none;">
     <div class="dialog">
         <h3>Edit Message</h3>
@@ -110,7 +109,7 @@
     </div>
 </div>
 
-<!-- DELETE MESSAGE DIALOG -->
+<!-- delete message -->
 <div class="dialog-overlay" id="deleteDialog" style="display:none;">
     <div class="dialog">
         <h3>Delete Message</h3>
@@ -122,7 +121,7 @@
     </div>
 </div>
 
-<!-- LEAVE GROUP DIALOG -->
+<!-- leave group -->
 <div class="dialog-overlay" id="leaveDialog" style="display:none;">
     <div class="dialog">
         <h3>Leave Group</h3>

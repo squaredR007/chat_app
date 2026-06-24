@@ -1,11 +1,7 @@
-// ── Config ──
+// Config 
 const API_BASE = "http://localhost:8080/api";
 
-// TEMPORARY TEST DATA — remove when login page is ready
-localStorage.setItem("username", "testuser");
-localStorage.setItem("userId", "test123");
-
-// ── Read logged-in user from localStorage (set by login page) ──
+//  Read logged-in user from localStorage (set by login page)
 const currentUsername = localStorage.getItem("username");
 const currentUserId = localStorage.getItem("userId");
 
@@ -14,7 +10,7 @@ if (!currentUsername || !currentUserId) {
     window.location.href = "login.html";
 }
 
-// ── DOM References ──
+//  DOM References 
 const chatList = document.getElementById("chatList");
 const searchInput = document.getElementById("searchInput");
 const currentUserAvatar = document.getElementById("currentUserAvatar");
@@ -22,7 +18,7 @@ const currentUserAvatar = document.getElementById("currentUserAvatar");
 // Show current user's initial in the sidebar avatar
 currentUserAvatar.textContent = currentUsername ? currentUsername.charAt(0).toUpperCase() : "?";
 
-// ── Theme Toggle ──
+// Theme Toggle 
 const themeToggle = document.getElementById("themeToggle");
 
 // Load saved theme preference from localStorage
@@ -50,10 +46,10 @@ themeToggle.addEventListener("click", () => {
     }
 });
 
-// ── State ──
-let allChats = []; // full list of chats from server
+// State
+let allChats = []; //list of chats
 
-// ── Fetch all chats from backend ──
+// Fetch all chats from backend
 async function loadChats() {
     try {
         const response = await fetch(`${API_BASE}/chat/list`);
@@ -62,15 +58,14 @@ async function loadChats() {
         // data is an array of Chat objects from the backend
         allChats = data;
 
-        // Filter to only show chats relevant to the current user
-        // (chats where this user is a participant)
+        // only shows the chats that the user is participant in 
         const myChats = allChats.filter(chat => isMyChat(chat));
 
-        // Sort: pinned first, then by last message time (most recent first)
+        // Sort: pinned first, then by last message time
         myChats.sort((a, b) => {
             if (a.pinned && !b.pinned) return -1;
             if (!a.pinned && b.pinned) return 1;
-            return 0; // TODO: sort by last message timestamp in phase 2
+            return 0; //will be sorted by last message timestamp in phase 2
         });
 
         renderChats(myChats);
@@ -80,7 +75,7 @@ async function loadChats() {
     }
 }
 
-// ── Check if a chat belongs to the current user ──
+//Check if a chat belongs to the current user 
 function isMyChat(chat) {
     // PrivateChat: user1Username or user2Username matches current user
     if (chat.user1Username && chat.user2Username) {
@@ -93,7 +88,7 @@ function isMyChat(chat) {
     return false;
 }
 
-// ── Render the chat list ──
+// Render the chat list 
 function renderChats(chats) {
     chatList.innerHTML = "";
 
@@ -118,7 +113,7 @@ function renderChats(chats) {
     });
 }
 
-// ── Create a single chat list item ──
+// Create a single chat list item 
 function createChatItem(chat) {
     const isSaved = chat.chatId && chat.chatId.startsWith("saved_");
     const isGroup = chat.group != null;
@@ -130,7 +125,7 @@ function createChatItem(chat) {
     } else if (isGroup) {
         displayName = chat.group.groupName || "Unknown Group";
     } else {
-        // For private chat, show the OTHER person's username (not the current user)
+        // For private chat, show the other person's username 
         displayName = chat.user1Username === currentUsername
             ? chat.user2Username
             : chat.user1Username;
@@ -172,7 +167,7 @@ function createChatItem(chat) {
     return item;
 }
 
-// ── Get last message preview text ──
+// Get last message preview text
 function getLastMessagePreview(chat) {
     const messages = chat.messages;
     if (!messages || messages.length === 0) {
@@ -184,7 +179,7 @@ function getLastMessagePreview(chat) {
     return last.content ? last.content.substring(0, 40) : "";
 }
 
-// ── Get last message time (simplified for now) ──
+//  Get last message time (simplified for now)
 function getLastMessageTime(chat) {
     const messages = chat.messages;
     if (!messages || messages.length === 0) return "";
@@ -192,7 +187,7 @@ function getLastMessageTime(chat) {
     if (!last.timestamp) return "";
 
     // LocalDateTime from Java comes as array [year, month, day, hour, minute, second, nano]
-    // or as a string depending on Gson serialization
+    // or as a string
     if (Array.isArray(last.timestamp)) {
         const [year, month, day, hour, minute] = last.timestamp;
         const date = new Date(year, month - 1, day, hour, minute);
@@ -201,7 +196,7 @@ function getLastMessageTime(chat) {
     return "";
 }
 
-// ── Format time as "HH:MM" or "Mon DD" if older ──
+//  Format time as "HH:MM" or "Mon DD" if older 
 function formatTime(date) {
     const now = new Date();
     const isToday = date.toDateString() === now.toDateString();
@@ -211,7 +206,7 @@ function formatTime(date) {
     return date.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
-// ── Search filtering ──
+// search filtering
 searchInput.addEventListener("input", () => {
     const query = searchInput.value.trim().toLowerCase();
     if (!query) {
@@ -229,16 +224,16 @@ searchInput.addEventListener("input", () => {
     renderChats(filtered);
 });
 
-// ── Helper to get display name (used in search) ──
+//  Helper to get display name (used in search)
 function getDisplayName(chat) {
     if (chat.chatId && chat.chatId.startsWith("saved_")) return "Saved Messages";
     if (chat.group) return chat.group.groupName || "";
     return chat.user1Username === currentUsername ? chat.user2Username : chat.user1Username;
 }
 
-// ── Poll for new chats every 3 seconds ──
+// Poll for new chats every 3 seconds
 // This keeps the home page updated without needing a full WebSocket
 setInterval(loadChats, 3000);
 
-// ── Initial load ──
+//Initial load
 loadChats();

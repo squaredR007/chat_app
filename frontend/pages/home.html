@@ -10,12 +10,14 @@
 
 <div class="app-container">
 
-    <!-- LEFT SIDEBAR -->
+    <!-- left sidebar -->
     <aside class="sidebar">
 
         <!-- Current user avatar + settings button -->
         <div class="sidebar-header">
-            <div class="avatar" id="currentUserAvatar">?</div>
+            <a href="profile.html">
+                <div class="avatar" id="currentUserAvatar">?</div>
+            </a>
             <span class="app-title">ChatApp</span>
             <button class="icon-btn" id="themeToggle" title="Toggle theme">🌙</button>
             <a href="settings.html" class="icon-btn" title="Settings">⚙️</a>
@@ -28,7 +30,6 @@
 
         <!-- Chat list -->
         <div class="chat-list" id="chatList">
-            <!-- Populated by home.js -->
             <div class="loading">Loading chats...</div>
         </div>
 
@@ -37,7 +38,7 @@
 
     </aside>
 
-    <!-- MAIN AREA (shown when no chat is selected) -->
+    <!-- main area (shown when no chat is selected) -->
     <main class="main-area">
         <div class="welcome">
             <div class="welcome-icon">💬</div>

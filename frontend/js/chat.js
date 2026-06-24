@@ -1,8 +1,8 @@
-// ── Config ──
+//Config
 const API_BASE = "http://localhost:8080/api";
 const POLL_INTERVAL = 3000; // poll every 3 seconds
 
-// ── Read logged-in user from localStorage ──
+//Read logged-in user from localStorage
 const currentUsername = localStorage.getItem("username");
 const currentUserId = localStorage.getItem("userId");
 
@@ -11,13 +11,12 @@ if (!currentUsername || !currentUserId) {
     window.location.href = "login.html";
 }
 
-// ── Apply saved theme ──
+// Apply saved theme
 if (localStorage.getItem("theme") === "dark") {
     document.body.classList.add("dark");
 }
 
-// ── Read chatId from URL query params ──
-// e.g. chat.html?chatId=abc123
+// Read chatId from URL query params
 const urlParams = new URLSearchParams(window.location.search);
 const chatId = urlParams.get("chatId");
 
@@ -26,7 +25,7 @@ if (!chatId) {
     window.location.href = "home.html";
 }
 
-// ── DOM References ──
+// DOM References
 const messagesArea = document.getElementById("messagesArea");
 const messageInput = document.getElementById("messageInput");
 const sendBtn = document.getElementById("sendBtn");
@@ -39,14 +38,14 @@ const messageSearchBar = document.getElementById("messageSearchBar");
 const messageSearchInput = document.getElementById("messageSearchInput");
 const closeSearchBtn = document.getElementById("closeSearchBtn");
 
-// ── State ──
+// State
 let allMessages = [];         // full message list for this chat
-let lastPollTimestamp = 0;    // last time we polled (epoch ms) — used for polling
+let lastPollTimestamp = 0;    // last time we polled 
 let editingMessageId = null;  // tracks which message is being edited
 let deletingMessageId = null; // tracks which message is being deleted
 let otherUsername = null;     // the other user in this private chat
 
-// ── Load chat info (to get the other user's name) ──
+// Load chat info (to get the other user's name)
 async function loadChatInfo() {
     try {
         const response = await fetch(`${API_BASE}/chat/list`);
@@ -81,15 +80,12 @@ async function loadChatInfo() {
     }
 }
 
-// ── Load the other user's last seen status ──
+// Load the other user's last seen status
 async function loadOtherUserStatus() {
-    // For now show a placeholder — in a full implementation
-    // we'd have a /api/user/info endpoint returning lastSeen
-    // This will be connected properly when user profile API is extended
     headerStatus.textContent = "last seen recently";
 }
 
-// ── Load all messages for this chat ──
+// Load all messages for this chat
 async function loadMessages() {
     try {
         const response = await fetch(`${API_BASE}/chat/messages?chatId=${chatId}`);
@@ -105,7 +101,7 @@ async function loadMessages() {
     }
 }
 
-// ── Poll for new messages since last poll ──
+//Poll for new messages since last poll
 async function pollNewMessages() {
     try {
         const response = await fetch(`${API_BASE}/chat/poll?chatId=${chatId}&since=${lastPollTimestamp}`);
@@ -118,12 +114,12 @@ async function pollNewMessages() {
             scrollToBottom();
         }
     } catch (err) {
-        // silently fail on poll errors — don't disrupt the UI
+        // silently fail on poll errors
         console.error("Poll failed:", err);
     }
 }
 
-// ── Render all messages ──
+//Render all messages
 function renderMessages(messages) {
     if (!messages || messages.length === 0) {
         messagesArea.innerHTML = `<div class="empty-state">No messages yet. Say hello! 👋</div>`;
@@ -137,7 +133,7 @@ function renderMessages(messages) {
     });
 }
 
-// ── Create a single message bubble ──
+//Create a single message bubble
 function createMessageBubble(msg) {
     const isMine = msg.senderUsername === currentUsername;
     const isDeleted = msg.deleted;
@@ -195,7 +191,7 @@ function createMessageBubble(msg) {
     return bubble;
 }
 
-// ── Send a message ──
+// Send a message
 async function sendMessage() {
     const content = messageInput.value.trim();
     if (!content) return;
@@ -216,7 +212,6 @@ async function sendMessage() {
         const data = await response.json();
         if (data.messageId) {
             // Add the new message locally so it appears immediately
-            // without waiting for the next poll
             const newMessage = {
                 id: data.messageId,
                 senderUsername: currentUsername,
@@ -236,7 +231,7 @@ async function sendMessage() {
     }
 }
 
-// ── Edit message dialog ──
+// Edit message dialog
 function openEditDialog(messageId, currentContent) {
     editingMessageId = messageId;
     document.getElementById("editInput").value = currentContent;
@@ -278,7 +273,7 @@ document.getElementById("editConfirmBtn").addEventListener("click", async () => 
     }
 });
 
-// ── Delete message dialog ──
+// Delete message dialog
 function openDeleteDialog(messageId) {
     deletingMessageId = messageId;
     document.getElementById("deleteDialog").style.display = "flex";
@@ -315,7 +310,7 @@ document.getElementById("deleteConfirmBtn").addEventListener("click", async () =
     }
 });
 
-// ── Report message ──
+//Report message
 async function reportMessage(messageId) {
     try {
         await fetch(`${API_BASE}/chat/report`, {
@@ -332,7 +327,7 @@ async function reportMessage(messageId) {
     }
 }
 
-// ── Message search ──
+// Message search
 searchToggleBtn.addEventListener("click", () => {
     const isVisible = messageSearchBar.style.display !== "none";
     messageSearchBar.style.display = isVisible ? "none" : "flex";
@@ -377,7 +372,7 @@ messageSearchInput.addEventListener("input", () => {
     });
 });
 
-// ── Send on Enter key ──
+//Send on Enter key
 messageInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
@@ -385,10 +380,10 @@ messageInput.addEventListener("keydown", (e) => {
     }
 });
 
-// ── Send button click ──
+//Send button click
 sendBtn.addEventListener("click", sendMessage);
 
-// ── File attach (placeholder for now) ──
+//File attach (placeholder)
 fileInput.addEventListener("change", () => {
     if (fileInput.files.length > 0) {
         alert(`File "${fileInput.files[0].name}" selected. File upload will be fully implemented in Phase 2.`);
@@ -396,7 +391,7 @@ fileInput.addEventListener("change", () => {
     }
 });
 
-// ── Close dialogs when clicking outside ──
+//Close dialogs when clicking outside
 document.getElementById("editDialog").addEventListener("click", (e) => {
     if (e.target === document.getElementById("editDialog")) {
         document.getElementById("editDialog").style.display = "none";
@@ -411,13 +406,12 @@ document.getElementById("deleteDialog").addEventListener("click", (e) => {
     }
 });
 
-// ── Scroll to the latest message ──
+//Scroll to the latest message
 function scrollToBottom() {
     messagesArea.scrollTop = messagesArea.scrollHeight;
 }
 
-// ── Format Java LocalDateTime array to readable string ──
-// Gson serializes Java LocalDateTime as [year, month, day, hour, minute, second, nano]
+// Format Java LocalDateTime array to readable string
 function formatTimestamp(timestamp) {
     if (!timestamp) return "";
     if (Array.isArray(timestamp)) {
@@ -428,14 +422,14 @@ function formatTimestamp(timestamp) {
     return "";
 }
 
-// ── Returns current time as a LocalDateTime-style array (for optimistic UI) ──
+// Returns current time as a LocalDateTime-style array
 function localDateTimeArray() {
     const now = new Date();
     return [now.getFullYear(), now.getMonth() + 1, now.getDate(),
             now.getHours(), now.getMinutes(), now.getSeconds(), 0];
 }
 
-// ── Escape HTML to prevent XSS ──
+//Escape HTML to prevent XSS
 function escapeHtml(text) {
     if (!text) return "";
     return text
@@ -445,12 +439,12 @@ function escapeHtml(text) {
         .replace(/"/g, "&quot;");
 }
 
-// ── Escape special regex characters ──
+//Escape special regex characters
 function escapeRegex(text) {
     return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// ── Init ──
+// Init
 loadChatInfo();
 loadMessages();
 

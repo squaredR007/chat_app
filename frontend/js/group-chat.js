@@ -1,8 +1,8 @@
-// ── Config ──
+// Config
 const API_BASE = "http://localhost:8080/api";
 const POLL_INTERVAL = 3000;
 
-// ── Read logged-in user from localStorage ──
+// Read logged-in user from localStorage
 const currentUsername = localStorage.getItem("username");
 const currentUserId = localStorage.getItem("userId");
 
@@ -10,12 +10,12 @@ if (!currentUsername || !currentUserId) {
     window.location.href = "login.html";
 }
 
-// ── Apply saved theme ──
+//Apply saved theme
 if (localStorage.getItem("theme") === "dark") {
     document.body.classList.add("dark");
 }
 
-// ── Read chatId from URL ──
+// Read chatId from URL
 const urlParams = new URLSearchParams(window.location.search);
 const chatId = urlParams.get("chatId");
 
@@ -23,7 +23,7 @@ if (!chatId) {
     window.location.href = "home.html";
 }
 
-// ── DOM References ──
+// DOM References
 const messagesArea = document.getElementById("messagesArea");
 const messageInput = document.getElementById("messageInput");
 const sendBtn = document.getElementById("sendBtn");
@@ -44,14 +44,14 @@ const addMemberInput = document.getElementById("addMemberInput");
 const addMemberBtn = document.getElementById("addMemberBtn");
 const leaveGroupBtn = document.getElementById("leaveGroupBtn");
 
-// ── State ──
+//State
 let allMessages = [];
 let lastPollTimestamp = 0;
 let editingMessageId = null;
 let deletingMessageId = null;
 let currentGroup = null; // the Group object for this chat
 
-// ── Load group info ──
+//Load group info
 async function loadGroupInfo() {
     try {
         const response = await fetch(`${API_BASE}/chat/list`);
@@ -95,7 +95,7 @@ async function loadGroupInfo() {
     }
 }
 
-// ── Render member list in info panel ──
+//Render member list in info panel
 function renderMembers(group) {
     memberList.innerHTML = "";
     const members = group.membersUsernames || [];
@@ -115,7 +115,7 @@ function renderMembers(group) {
     });
 }
 
-// ── Load all messages ──
+// Load all messages
 async function loadMessages() {
     try {
         const response = await fetch(`${API_BASE}/chat/messages?chatId=${chatId}`);
@@ -131,7 +131,7 @@ async function loadMessages() {
     }
 }
 
-// ── Poll for new messages ──
+// Poll for new messages
 async function pollNewMessages() {
     try {
         const response = await fetch(`${API_BASE}/chat/poll?chatId=${chatId}&since=${lastPollTimestamp}`);
@@ -148,7 +148,7 @@ async function pollNewMessages() {
     }
 }
 
-// ── Render all messages ──
+// Render all messages
 function renderMessages(messages) {
     if (!messages || messages.length === 0) {
         messagesArea.innerHTML = `<div class="empty-state">No messages yet. Say hi to the group! 👋</div>`;
@@ -162,7 +162,7 @@ function renderMessages(messages) {
     });
 }
 
-// ── Create a single message bubble ──
+// Create a single message bubble
 function createMessageBubble(msg) {
     const isMine = msg.senderUsername === currentUsername;
     const isDeleted = msg.deleted;
@@ -222,7 +222,7 @@ function createMessageBubble(msg) {
     return bubble;
 }
 
-// ── Send message ──
+// Send message
 async function sendMessage() {
     const content = messageInput.value.trim();
     if (!content) return;
@@ -261,7 +261,7 @@ async function sendMessage() {
     }
 }
 
-// ── Info Panel toggle ──
+// Info Panel toggle
 infoToggleBtn.addEventListener("click", () => {
     infoPanel.classList.toggle("open");
 });
@@ -274,7 +274,7 @@ closePanelBtn.addEventListener("click", () => {
     infoPanel.classList.remove("open");
 });
 
-// ── Add member ──
+// Add member
 addMemberBtn.addEventListener("click", async () => {
     const username = addMemberInput.value.trim();
     if (!username) return;
@@ -302,7 +302,7 @@ addMemberBtn.addEventListener("click", async () => {
     }
 });
 
-// ── Leave group dialog ──
+// Leave group dialog
 leaveGroupBtn.addEventListener("click", () => {
     document.getElementById("leaveDialog").style.display = "flex";
 });
@@ -328,7 +328,7 @@ document.getElementById("leaveConfirmBtn").addEventListener("click", async () =>
     }
 });
 
-// ── Edit message dialog ──
+// Edit message dialog
 function openEditDialog(messageId, currentContent) {
     editingMessageId = messageId;
     document.getElementById("editInput").value = currentContent;
@@ -369,7 +369,7 @@ document.getElementById("editConfirmBtn").addEventListener("click", async () => 
     }
 });
 
-// ── Delete message dialog ──
+// Delete message dialog
 function openDeleteDialog(messageId) {
     deletingMessageId = messageId;
     document.getElementById("deleteDialog").style.display = "flex";
@@ -405,7 +405,7 @@ document.getElementById("deleteConfirmBtn").addEventListener("click", async () =
     }
 });
 
-// ── Report message ──
+// Report message
 async function reportMessage(messageId) {
     try {
         await fetch(`${API_BASE}/chat/report`, {
@@ -419,7 +419,7 @@ async function reportMessage(messageId) {
     }
 }
 
-// ── Message search ──
+//Message search
 searchToggleBtn.addEventListener("click", () => {
     const isVisible = messageSearchBar.style.display !== "none";
     messageSearchBar.style.display = isVisible ? "none" : "flex";
@@ -458,7 +458,7 @@ messageSearchInput.addEventListener("input", () => {
     });
 });
 
-// ── Send on Enter ──
+// Send on Enter
 messageInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
@@ -468,7 +468,7 @@ messageInput.addEventListener("keydown", (e) => {
 
 sendBtn.addEventListener("click", sendMessage);
 
-// ── File attach placeholder ──
+//File attach placeholder
 fileInput.addEventListener("change", () => {
     if (fileInput.files.length > 0) {
         alert(`File "${fileInput.files[0].name}" selected. File upload will be implemented in Phase 2.`);
@@ -476,7 +476,7 @@ fileInput.addEventListener("change", () => {
     }
 });
 
-// ── Close dialogs when clicking outside ──
+// Close dialogs when clicking outside
 ["editDialog", "deleteDialog", "leaveDialog"].forEach(id => {
     document.getElementById(id).addEventListener("click", (e) => {
         if (e.target === document.getElementById(id)) {
@@ -487,7 +487,7 @@ fileInput.addEventListener("change", () => {
     });
 });
 
-// ── Helpers ──
+// functions
 function scrollToBottom() {
     messagesArea.scrollTop = messagesArea.scrollHeight;
 }
@@ -521,7 +521,7 @@ function escapeRegex(text) {
     return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// ── Init ──
+//  Init 
 loadGroupInfo();
 loadMessages();
 setInterval(pollNewMessages, POLL_INTERVAL);
