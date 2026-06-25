@@ -45,7 +45,7 @@ form?.addEventListener("submit", async (e) => {
 
             alert("Account created");
 
-            window.location.href = "../login/login.html";
+            window.location.href = "../pages/home.html";
 
         } else {
 
