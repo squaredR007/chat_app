@@ -1,5 +1,5 @@
 //  Config 
-const API_BASE = "http://localhost:8080/api";
+const API_BASE = "http://localhost:7600/api";
 
 //Read logged-in user from localStorage 
 const currentUsername = localStorage.getItem("username");

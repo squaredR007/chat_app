@@ -1,5 +1,5 @@
 // Config
-const API_BASE = "http://localhost:8080/api";
+const API_BASE = "http://localhost:7600/api";
 const POLL_INTERVAL = 3000;
 
 // Read logged-in user from localStorage
