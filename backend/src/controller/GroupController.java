@@ -95,6 +95,22 @@ public class GroupController implements HttpHandler {
         String groupId = queryParams.get("groupId").getAsString();
 
         Group group = groupService.getGroup(groupId);
+        if (group == null) {
+            HttpUtils.sendError(exchange , 404 , "Group not found");
+            return;
+        }
+
+        JsonObject response = new JsonObject() ;
+        response.addProperty("groupId" , group.getGroupId());
+        response.addProperty("groupName" , group.getGroupName());
+        response.addProperty("adminUsername", group.getAdminUsername());
+        response.addProperty("memberCount", group.getMembersUsernames().size());
+
+        com.google.gson.JsonArray membersArray = new com.google.gson.JsonArray();
+        for (String member : group.getMembersUsernames()) {
+            membersArray.add(member);
+        }
+        response.add("membersUsernames", membersArray);
 
 
         HttpUtils.sendResponse(exchange, 200, group);

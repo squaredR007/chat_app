@@ -43,6 +43,11 @@ form?.addEventListener("submit", async (e) => {
 
         if (data.success) {
 
+            localStorage.clear() ;
+            localStorage.setItem("username" , data.username) ;
+            localStorage.setItem("userId" , data.userId) ;
+            localStorage.setItem("displayName" , data.displayName)
+
             alert("Account created");
 
             window.location.href = "../pages/home.html";

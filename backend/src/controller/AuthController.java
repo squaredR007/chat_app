@@ -5,14 +5,18 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import service.AuthService;
 import java.io.IOException;
+import model.User ;
+import repository.UserRepository ;
 
 public class AuthController implements HttpHandler {
 
     private final AuthService authService;//access to the service
+    private final UserRepository userRepository ;
 
     //constructor
-    public AuthController(AuthService authService){
+    public AuthController(AuthService authService , UserRepository userRepository){
         this.authService=authService;
+        this.userRepository = userRepository ;
     }
 
     @Override
@@ -50,6 +54,13 @@ public class AuthController implements HttpHandler {
 
         JsonObject response = new JsonObject();
         response.addProperty("success", result);
+        if (result) {
+            // return user info so frontend can store it immediately
+            User user = userRepository.getByUsername(username);
+            response.addProperty("userId", user.getUserId());
+            response.addProperty("username", user.getUsername());
+            response.addProperty("displayName", user.getDisplayName() != null ? user.getDisplayName() : username);
+        }
 
         HttpUtils.sendResponse(exchange, 200, response);
     }
@@ -65,6 +76,15 @@ public class AuthController implements HttpHandler {
 
         JsonObject response = new JsonObject();
         response.addProperty("success", result);
+
+        if (result) {
+            // turning back users info to be saved in local storage
+
+            User user = userRepository.getByUsername(username);
+            response.addProperty("userId", user.getUserId());
+            response.addProperty("username", user.getUsername());
+            response.addProperty("displayName", user.getDisplayName() != null ? user.getDisplayName() : username);
+        }
 
         HttpUtils.sendResponse(exchange, 200, response);
     }

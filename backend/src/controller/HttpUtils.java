@@ -1,5 +1,6 @@
 package controller;
 import com.google.gson.Gson ;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject ;
 import com.sun.net.httpserver.HttpExchange ;
 import java.io.IOException ;
@@ -8,8 +9,37 @@ import java.io.BufferedReader ;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets ;
 
+
 public class HttpUtils {
-    private static final Gson gson = new Gson();
+
+    //Avoiding conflicts between Gson and java localDateTime library
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(java.time.LocalDateTime.class, new com.google.gson.TypeAdapter<java.time.LocalDateTime>() {
+                @Override
+                public void write(com.google.gson.stream.JsonWriter out, java.time.LocalDateTime value) throws java.io.IOException {
+                    if (value == null) {
+                        out.nullValue();
+                    } else {
+                        // serialize as array [year, month, day, hour, minute, second, nano]
+                        out.beginArray();
+                        out.value(value.getYear());
+                        out.value(value.getMonthValue());
+                        out.value(value.getDayOfMonth());
+                        out.value(value.getHour());
+                        out.value(value.getMinute());
+                        out.value(value.getSecond());
+                        out.value(value.getNano());
+                        out.endArray();
+                    }
+                }
+
+                @Override
+                public java.time.LocalDateTime read(com.google.gson.stream.JsonReader in) throws java.io.IOException {
+                    in.skipValue();
+                    return null;
+                }
+            })
+            .create();
 
     public static Gson getGson() {
         return gson;

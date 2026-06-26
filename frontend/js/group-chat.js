@@ -56,22 +56,23 @@ async function loadGroupInfo() {
     try {
         const response = await fetch(`${API_BASE}/chat/list`);
         const chats = await response.json();
-
         const chat = chats.find(c => c.chatId === chatId);
+
+
         if (!chat || !chat.group) {
             headerName.textContent = "Group";
             return;
         }
+        const groupId = chat.group.groupId ;
+        const groupResponse = await fetch(`${API_BASE}/group/info?groupId=${groupId}`);
 
-        currentGroup = chat.group;
+        currentGroup = await groupResponse.json ;
 
         // Update header
         headerName.textContent = currentGroup.groupName;
         headerAvatar.textContent = currentGroup.groupName.charAt(0).toUpperCase();
-        const memberCount = currentGroup.membersUsernames
-            ? currentGroup.membersUsernames.length
-            : 0;
-        headerStatus.textContent = `${memberCount} member${memberCount !== 1 ? "s" : ""}`;
+        headerStatus.textContent = `${currentGroup.memberCount} member${currentGroup.memberCount !== 1 ? "s" : ""}`;
+        
 
         // Update info panel
         document.getElementById("infoGroupAvatar").textContent =
