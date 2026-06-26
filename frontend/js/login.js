@@ -17,7 +17,7 @@ form?.addEventListener("submit", async (e) => {
 
     try {
 
-        const response = await fetch("http://localhost:7600/api/auth/login", {
+        const response = await fetch("http://localhost:8080/api/auth/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -32,8 +32,11 @@ form?.addEventListener("submit", async (e) => {
 
         if (data.success) {
 
+            localStorage.clear() ;
+
             localStorage.setItem("username", username);
             localStorage.setItem("userId", data.userId);
+            localStorage.setItem("displayName" , data.displayName) ;
 
             alert("Login successful");
 

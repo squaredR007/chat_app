@@ -1,31 +1,29 @@
-//Config
-const API_BASE = "http://localhost:7600/api";
-const POLL_INTERVAL = 3000; // poll every 3 seconds
+// ── Config ──
+const API_BASE = "http://localhost:8080/api";
+const POLL_INTERVAL = 3000;
 
-//Read logged-in user from localStorage
+// ── Read logged-in user from localStorage ──
 const currentUsername = localStorage.getItem("username");
 const currentUserId = localStorage.getItem("userId");
 
-// If not logged in, redirect to login
 if (!currentUsername || !currentUserId) {
     window.location.href = "login.html";
 }
 
-// Apply saved theme
+// ── Apply saved theme ──
 if (localStorage.getItem("theme") === "dark") {
     document.body.classList.add("dark");
 }
 
-// Read chatId from URL query params
+// ── Read chatId from URL ──
 const urlParams = new URLSearchParams(window.location.search);
 const chatId = urlParams.get("chatId");
 
-// If no chatId in URL, go back to home
 if (!chatId) {
     window.location.href = "home.html";
 }
 
-// DOM References
+// ── DOM References ──
 const messagesArea = document.getElementById("messagesArea");
 const messageInput = document.getElementById("messageInput");
 const sendBtn = document.getElementById("sendBtn");
@@ -38,27 +36,30 @@ const messageSearchBar = document.getElementById("messageSearchBar");
 const messageSearchInput = document.getElementById("messageSearchInput");
 const closeSearchBtn = document.getElementById("closeSearchBtn");
 
-// State
-let allMessages = [];         // full message list for this chat
-let lastPollTimestamp = 0;    // last time we polled 
-let editingMessageId = null;  // tracks which message is being edited
-let deletingMessageId = null; // tracks which message is being deleted
-let otherUsername = null;     // the other user in this private chat
+// ── State ──
+let allMessages = [];
+// Start at current time so poll only fetches NEW messages after page load
+// Will be updated properly after loadMessages() completes
+let lastPollTimestamp = Date.now();
+let pollInterval = null;
+let editingMessageId = null;
+let deletingMessageId = null;
+let otherUsername = null;
+// Track message IDs we already have to prevent duplicates
+const seenMessageIds = new Set();
 
-// Load chat info (to get the other user's name)
+// ── Load chat info ──
 async function loadChatInfo() {
     try {
         const response = await fetch(`${API_BASE}/chat/list`);
         const chats = await response.json();
 
-        // Find this specific chat by chatId
         const chat = chats.find(c => c.chatId === chatId);
         if (!chat) {
             headerName.textContent = "Unknown Chat";
             return;
         }
 
-        // Determine the other user's username
         const isSaved = chatId.startsWith("saved_");
         if (isSaved) {
             otherUsername = currentUsername;
@@ -72,7 +73,7 @@ async function loadChatInfo() {
                 : chat.user1Username;
             headerName.textContent = otherUsername;
             headerAvatar.textContent = otherUsername.charAt(0).toUpperCase();
-            loadOtherUserStatus();
+            headerStatus.textContent = "last seen recently";
         }
     } catch (err) {
         headerName.textContent = "Chat";
@@ -80,46 +81,59 @@ async function loadChatInfo() {
     }
 }
 
-// Load the other user's last seen status
-async function loadOtherUserStatus() {
-    headerStatus.textContent = "last seen recently";
-}
-
-// Load all messages for this chat
+// ── Load all messages (initial load only) ──
 async function loadMessages() {
     try {
         const response = await fetch(`${API_BASE}/chat/messages?chatId=${chatId}`);
         const messages = await response.json();
 
-        allMessages = messages;
+        allMessages = Array.isArray(messages) ? messages : [];
+
+        // Track all loaded message IDs so poll doesn't add them again
+        allMessages.forEach(m => seenMessageIds.add(m.id));
+
+        // Set timestamp AFTER loading so poll only gets messages newer than now
         lastPollTimestamp = Date.now();
+
         renderMessages(allMessages);
         scrollToBottom();
+
+        // Start polling only AFTER initial load is complete
+        if (!pollInterval) {
+            pollInterval = setInterval(pollNewMessages, POLL_INTERVAL);
+        }
     } catch (err) {
         messagesArea.innerHTML = `<div class="empty-state">Could not connect to server.<br>Make sure the server is running.</div>`;
         console.error("Failed to load messages:", err);
     }
 }
 
-//Poll for new messages since last poll
+// ── Poll for NEW messages only ──
 async function pollNewMessages() {
     try {
         const response = await fetch(`${API_BASE}/chat/poll?chatId=${chatId}&since=${lastPollTimestamp}`);
         const newMessages = await response.json();
 
-        if (newMessages && newMessages.length > 0) {
-            allMessages = [...allMessages, ...newMessages];
-            lastPollTimestamp = Date.now();
-            renderMessages(allMessages);
-            scrollToBottom();
-        }
+        if (!Array.isArray(newMessages) || newMessages.length === 0) return;
+
+        // Filter out any messages we already have (prevents duplicates)
+        const trulyNew = newMessages.filter(m => !seenMessageIds.has(m.id));
+
+        if (trulyNew.length === 0) return;
+
+        // Update timestamp and seen IDs
+        lastPollTimestamp = Date.now();
+        trulyNew.forEach(m => seenMessageIds.add(m.id));
+
+        allMessages = [...allMessages, ...trulyNew];
+        renderMessages(allMessages);
+        scrollToBottom();
     } catch (err) {
-        // silently fail on poll errors
         console.error("Poll failed:", err);
     }
 }
 
-//Render all messages
+// ── Render all messages ──
 function renderMessages(messages) {
     if (!messages || messages.length === 0) {
         messagesArea.innerHTML = `<div class="empty-state">No messages yet. Say hello! 👋</div>`;
@@ -133,7 +147,7 @@ function renderMessages(messages) {
     });
 }
 
-//Create a single message bubble
+// ── Create a single message bubble ──
 function createMessageBubble(msg) {
     const isMine = msg.senderUsername === currentUsername;
     const isDeleted = msg.deleted;
@@ -142,10 +156,8 @@ function createMessageBubble(msg) {
     bubble.className = `message-bubble ${isMine ? "mine" : "theirs"}${isDeleted ? " deleted" : ""}`;
     bubble.dataset.messageId = msg.id;
 
-    // Format timestamp
     const timeStr = formatTimestamp(msg.timestamp);
 
-    // Message content
     let contentHtml;
     if (isDeleted) {
         contentHtml = "🚫 This message was deleted";
@@ -155,12 +167,10 @@ function createMessageBubble(msg) {
         contentHtml = escapeHtml(msg.content || "");
     }
 
-    // Edited tag
     const editedTag = msg.edited && !isDeleted
         ? `<span class="edited-tag">edited</span>`
         : "";
 
-    // Action buttons (only for own non-deleted messages)
     let actionsHtml = "";
     if (isMine && !isDeleted) {
         actionsHtml = `
@@ -171,7 +181,6 @@ function createMessageBubble(msg) {
             </div>
         `;
     } else if (!isMine && !isDeleted) {
-        // Can report others' messages but not edit/delete them
         actionsHtml = `
             <div class="bubble-actions">
                 <button class="action-btn" onclick="reportMessage('${msg.id}')">Report</button>
@@ -191,11 +200,12 @@ function createMessageBubble(msg) {
     return bubble;
 }
 
-// Send a message
+// ── Send a message ──
 async function sendMessage() {
     const content = messageInput.value.trim();
     if (!content) return;
 
+    // Clear input immediately to prevent double-sends
     messageInput.value = "";
 
     try {
@@ -211,7 +221,7 @@ async function sendMessage() {
 
         const data = await response.json();
         if (data.messageId) {
-            // Add the new message locally so it appears immediately
+            // Add locally and mark as seen so poll doesn't add it again
             const newMessage = {
                 id: data.messageId,
                 senderUsername: currentUsername,
@@ -221,6 +231,7 @@ async function sendMessage() {
                 edited: false,
                 deleted: false
             };
+            seenMessageIds.add(data.messageId);
             allMessages.push(newMessage);
             renderMessages(allMessages);
             scrollToBottom();
@@ -231,7 +242,7 @@ async function sendMessage() {
     }
 }
 
-// Edit message dialog
+// ── Edit message dialog ──
 function openEditDialog(messageId, currentContent) {
     editingMessageId = messageId;
     document.getElementById("editInput").value = currentContent;
@@ -258,7 +269,6 @@ document.getElementById("editConfirmBtn").addEventListener("click", async () => 
             })
         });
 
-        // Update locally
         const msg = allMessages.find(m => m.id === editingMessageId);
         if (msg) {
             msg.content = newContent;
@@ -273,7 +283,7 @@ document.getElementById("editConfirmBtn").addEventListener("click", async () => 
     }
 });
 
-// Delete message dialog
+// ── Delete message dialog ──
 function openDeleteDialog(messageId) {
     deletingMessageId = messageId;
     document.getElementById("deleteDialog").style.display = "flex";
@@ -298,7 +308,6 @@ document.getElementById("deleteConfirmBtn").addEventListener("click", async () =
             })
         });
 
-        // Mark locally as deleted
         const msg = allMessages.find(m => m.id === deletingMessageId);
         if (msg) msg.deleted = true;
 
@@ -310,16 +319,13 @@ document.getElementById("deleteConfirmBtn").addEventListener("click", async () =
     }
 });
 
-//Report message
+// ── Report message ──
 async function reportMessage(messageId) {
     try {
         await fetch(`${API_BASE}/chat/report`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                chatId: chatId,
-                messageId: messageId
-            })
+            body: JSON.stringify({ chatId, messageId })
         });
         alert("Message reported to admin.");
     } catch (err) {
@@ -327,14 +333,14 @@ async function reportMessage(messageId) {
     }
 }
 
-// Message search
+// ── Message search ──
 searchToggleBtn.addEventListener("click", () => {
     const isVisible = messageSearchBar.style.display !== "none";
     messageSearchBar.style.display = isVisible ? "none" : "flex";
     if (!isVisible) messageSearchInput.focus();
     else {
         messageSearchInput.value = "";
-        renderMessages(allMessages); // clear highlights
+        renderMessages(allMessages);
     }
 });
 
@@ -351,7 +357,6 @@ messageSearchInput.addEventListener("input", () => {
         return;
     }
 
-    // Highlight matching messages
     const filtered = allMessages.filter(m =>
         m.content && m.content.toLowerCase().includes(query)
     );
@@ -359,20 +364,18 @@ messageSearchInput.addEventListener("input", () => {
     messagesArea.innerHTML = "";
     filtered.forEach(msg => {
         const bubble = createMessageBubble(msg);
-        // Highlight the matching text
         const contentEl = bubble.querySelector(".bubble-content");
         if (contentEl && msg.content) {
             const regex = new RegExp(`(${escapeRegex(query)})`, "gi");
             contentEl.innerHTML = escapeHtml(msg.content).replace(
-                regex,
-                `<span class="highlight">$1</span>`
+                regex, `<span class="highlight">$1</span>`
             );
         }
         messagesArea.appendChild(bubble);
     });
 });
 
-//Send on Enter key
+// ── Send on Enter ──
 messageInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
@@ -380,18 +383,18 @@ messageInput.addEventListener("keydown", (e) => {
     }
 });
 
-//Send button click
+// ── Send button ──
 sendBtn.addEventListener("click", sendMessage);
 
-//File attach (placeholder)
+// ── File attach placeholder ──
 fileInput.addEventListener("change", () => {
     if (fileInput.files.length > 0) {
-        alert(`File "${fileInput.files[0].name}" selected. File upload will be fully implemented in Phase 2.`);
+        alert(`File "${fileInput.files[0].name}" selected. File upload will be implemented in Phase 2.`);
         fileInput.value = "";
     }
 });
 
-//Close dialogs when clicking outside
+// ── Close dialogs when clicking outside ──
 document.getElementById("editDialog").addEventListener("click", (e) => {
     if (e.target === document.getElementById("editDialog")) {
         document.getElementById("editDialog").style.display = "none";
@@ -406,12 +409,11 @@ document.getElementById("deleteDialog").addEventListener("click", (e) => {
     }
 });
 
-//Scroll to the latest message
+// ── Helpers ──
 function scrollToBottom() {
     messagesArea.scrollTop = messagesArea.scrollHeight;
 }
 
-// Format Java LocalDateTime array to readable string
 function formatTimestamp(timestamp) {
     if (!timestamp) return "";
     if (Array.isArray(timestamp)) {
@@ -422,14 +424,12 @@ function formatTimestamp(timestamp) {
     return "";
 }
 
-// Returns current time as a LocalDateTime-style array
 function localDateTimeArray() {
     const now = new Date();
     return [now.getFullYear(), now.getMonth() + 1, now.getDate(),
             now.getHours(), now.getMinutes(), now.getSeconds(), 0];
 }
 
-//Escape HTML to prevent XSS
 function escapeHtml(text) {
     if (!text) return "";
     return text
@@ -439,14 +439,10 @@ function escapeHtml(text) {
         .replace(/"/g, "&quot;");
 }
 
-//Escape special regex characters
 function escapeRegex(text) {
     return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// Init
+// ── Init ──
 loadChatInfo();
-loadMessages();
-
-// Start polling for new messages
-setInterval(pollNewMessages, POLL_INTERVAL);
+loadMessages(); // polling starts inside loadMessages() after initial load

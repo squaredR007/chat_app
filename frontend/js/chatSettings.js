@@ -43,7 +43,7 @@ async function saveTheme(isDark) {
 
     try {
 
-        const response = await fetch("http://localhost:7600/api/settings/changeDarkMode", {
+        const response = await fetch("http://localhost:8080/api/settings/changeDarkMode", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

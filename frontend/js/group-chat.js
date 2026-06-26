@@ -1,5 +1,5 @@
 // Config
-const API_BASE = "http://localhost:7600/api";
+const API_BASE = "http://localhost:8080/api";
 const POLL_INTERVAL = 3000;
 
 // Read logged-in user from localStorage
@@ -521,7 +521,7 @@ function escapeRegex(text) {
     return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-//  Init 
+//  Init
 loadGroupInfo();
 loadMessages();
 setInterval(pollNewMessages, POLL_INTERVAL);

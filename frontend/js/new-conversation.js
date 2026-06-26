@@ -1,7 +1,7 @@
 //  Config 
-const API_BASE = "http://localhost:7600/api";
+const API_BASE = "http://localhost:8080/api";
 
-//Read logged-in user from localStorage 
+//Read logged-in user from localStorage
 const currentUsername = localStorage.getItem("username");
 const currentUserId = localStorage.getItem("userId");
 
@@ -14,7 +14,7 @@ if (localStorage.getItem("theme") === "dark") {
     document.body.classList.add("dark");
 }
 
-//  DOM References 
+//  DOM References
 const contactList = document.getElementById("contactList");
 const contactSearchInput = document.getElementById("contactSearchInput");
 const privateFeedback = document.getElementById("privateFeedback");
@@ -22,11 +22,11 @@ const groupFeedback = document.getElementById("groupFeedback");
 const memberChips = document.getElementById("memberChips");
 const groupMemberInput = document.getElementById("groupMemberInput");
 
-// State 
+// State
 let groupMembers = [currentUsername]; // admin is always a member
 let allContacts = [];
 
-// Tab switching 
+// Tab switching
 function switchTab(tab) {
     // Hide all content
     document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
@@ -93,7 +93,7 @@ document.getElementById("startPrivateChatBtn").addEventListener("click", async (
     }
 });
 
-// creating group 
+// creating group
 
 // Add member to the pending group member list
 document.getElementById("addMemberToListBtn").addEventListener("click", () => {
@@ -263,7 +263,7 @@ contactSearchInput.addEventListener("input", () => {
     renderContacts(filtered);
 });
 
-// Feedback helper 
+// Feedback helper
 function showFeedback(el, message, type) {
     el.textContent = message;
     el.className = `feedback ${type}`;
