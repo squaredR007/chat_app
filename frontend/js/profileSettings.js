@@ -24,7 +24,7 @@ async function changeDisplayName() {
 
     try {
 
-        await fetch("http://localhost:8080/api/settings/changeDisplayName", {
+        await fetch("http://localhost:7600/api/settings/changeDisplayName", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -51,7 +51,7 @@ async function changeBiography() {
 
     try {
 
-        await fetch("http://localhost:8080/api/settings/changeBiography", {
+        await fetch("http://localhost:7600/api/settings/changeBiography", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

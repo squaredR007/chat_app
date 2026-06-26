@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Load full user info from backend
     if (userId) {
         try {
-            const response = await fetch(`http://localhost:8080/api/user/info?userId=${userId}`);
+            const response = await fetch(`http://localhost:7600/api/user/info?userId=${userId}`);
             const user = await response.json();
 
             // Fill in bio

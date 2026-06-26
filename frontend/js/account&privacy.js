@@ -35,7 +35,7 @@ async function changeUsername() {
 
     try {
 
-        const response = await fetch("http://localhost:8080/api/settings/changeUsername", {
+        const response = await fetch("http://localhost:7600/api/settings/changeUsername", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -65,7 +65,7 @@ async function changeNumber() {
 
     try {
 
-        const response = await fetch("http://localhost:8080/api/settings/changeNumber", {
+        const response = await fetch("http://localhost:7600/api/settings/changeNumber", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -94,7 +94,7 @@ async function deleteAccount() {
 
     try {
 
-        const response = await fetch("http://localhost:8080/api/settings/deleteAccount", {
+        const response = await fetch("http://localhost:7600/api/settings/deleteAccount", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
