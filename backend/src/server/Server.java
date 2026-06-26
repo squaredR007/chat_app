@@ -32,7 +32,7 @@ public class Server {
         UserRepository userRepository = new UserRepository() ;
 
         //Services (business logic)
-        ChatService chatService = new ChatService(chatRepository);
+        ChatService chatService = new ChatService(chatRepository , userRepository);
         GroupService groupService = new GroupService(groupRepository , chatRepository);
         MessageService messageService = new MessageService(messageRepository);
         AuthService authService = new AuthService(userRepository , chatService);
@@ -45,7 +45,7 @@ public class Server {
         //Registering controllers
         server.createContext("/api/chat", new ChatController(chatService, messageService));
         server.createContext("/api/group", new GroupController(groupService));
-        server.createContext("/api/auth", new AuthController(authService));
+        server.createContext("/api/auth", new AuthController(authService , userRepository));
         server.createContext("/api/settings", new SettingsController(settingsService));
         server.createContext("/api/user", new UserController(userRepository));
 
