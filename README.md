@@ -35,7 +35,9 @@ TXT Files
 | POST   | /login         | Login         |
 | GET    | /users         | List users    |
 | POST   | /messages      | Send message  |
-| GET    | /messages/{id} | Chat history  |
+| GET    | /messages/{id} | Chat history  | 
+___________________________________________
+
 #اعضای تیم 
 1.ریحانه رضائی
 2.زینب دانشیار 
