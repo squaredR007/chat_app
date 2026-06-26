@@ -39,7 +39,6 @@ TXT Files
 | GET    | /users         | List users    |
 | POST   | /messages      | Send message  |
 | GET    | /messages/{id} | Chat history  | 
-___________________________________________
 
 # اعضای تیم
 1.ریحانه رضائی
