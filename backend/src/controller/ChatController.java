@@ -51,6 +51,10 @@ public class ChatController implements HttpHandler{
                 handleEditMessage(exchange);
             } else if (path.equals("/api/chat/delete") && method.equals("POST")) {
                 handleDeleteMessage(exchange);
+            }  else if (path.equals("/api/chat/unpin") && method.equals("POST")) {
+                handleUnpinChat(exchange);
+            } else if (path.equals("/api/chat/unarchive") && method.equals("POST")) {
+                handleUnarchiveChat(exchange);
             } else {
                 HttpUtils.sendError(exchange, 404, "Endpoint not found");
             }
@@ -78,7 +82,63 @@ public class ChatController implements HttpHandler{
 
     private void handleGetAllChats(HttpExchange exchange) throws IOException {
         List<Chat> chats = chatService.getAllChats();
-        HttpUtils.sendResponse(exchange, 200, chats);
+
+        com.google.gson.JsonArray result = new com.google.gson.JsonArray();
+
+        for (Chat chat : chats) {
+            JsonObject chatJson = new JsonObject();
+            chatJson.addProperty("chatId", chat.getChatId());
+            chatJson.addProperty("pinned", chat.isPinned());
+            chatJson.addProperty("archived", chat.isArchived());
+
+            // serialize messages
+            com.google.gson.JsonArray messagesArray = new com.google.gson.JsonArray();
+            if (chat.getMessages() != null) {
+                for (model.Message msg : chat.getMessages()) {
+                    JsonObject msgJson = new JsonObject();
+                    msgJson.addProperty("id", msg.getId());
+                    msgJson.addProperty("senderUsername", msg.getSenderUsername());
+                    msgJson.addProperty("content", msg.getContent());
+                    msgJson.addProperty("type", msg.getType().toString());
+                    msgJson.addProperty("deleted", msg.isDeleted());
+                    msgJson.addProperty("edited", msg.isEdited());
+                    chatJson.add("messages", messagesArray);
+                }
+            }
+            chatJson.add("messages", messagesArray);
+
+            // PrivateChat specific fields
+            if (chat instanceof model.PrivateChat) {
+                model.PrivateChat pc = (model.PrivateChat) chat;
+                chatJson.addProperty("user1Username", pc.getUser1Username());
+                chatJson.addProperty("user2Username", pc.getUser2Username());
+            }
+
+            // GroupChat specific fields
+            if (chat instanceof model.GroupChat) {
+                model.GroupChat gc = (model.GroupChat) chat;
+                model.Group group = gc.getGroup();
+                if (group != null) {
+                    JsonObject groupJson = new JsonObject();
+                    groupJson.addProperty("groupId", group.getGroupId());
+                    groupJson.addProperty("groupName", group.getGroupName());
+                    groupJson.addProperty("adminUsername", group.getAdminUsername());
+
+                    com.google.gson.JsonArray membersArray = new com.google.gson.JsonArray();
+                    if (group.getMembersUsernames() != null) {
+                        for (String member : group.getMembersUsernames()) {
+                            membersArray.add(member);
+                        }
+                    }
+                    groupJson.add("membersUsernames", membersArray);
+                    chatJson.add("group", groupJson);
+                }
+            }
+
+            result.add(chatJson);
+        }
+
+        HttpUtils.sendResponse(exchange, 200, result);
     }
 
     //Returning all of the messages as a list
@@ -184,6 +244,30 @@ public class ChatController implements HttpHandler{
 
         JsonObject response = new JsonObject();
         response.addProperty("status", "message deleted");
+        HttpUtils.sendResponse(exchange, 200, response);
+    }
+
+    // Unpinning a chat
+    private void handleUnpinChat(HttpExchange exchange) throws IOException {
+        JsonObject body = HttpUtils.readBody(exchange);
+        String chatId = body.get("chatId").getAsString();
+
+        chatService.unpinChat(chatId);
+
+        JsonObject response = new JsonObject();
+        response.addProperty("status", "unpinned");
+        HttpUtils.sendResponse(exchange, 200, response);
+    }
+
+    // Unarchiving a chat
+    private void handleUnarchiveChat(HttpExchange exchange) throws IOException {
+        JsonObject body = HttpUtils.readBody(exchange);
+        String chatId = body.get("chatId").getAsString();
+
+        chatService.unarchiveChat(chatId);
+
+        JsonObject response = new JsonObject();
+        response.addProperty("status", "unarchived");
         HttpUtils.sendResponse(exchange, 200, response);
     }
 
