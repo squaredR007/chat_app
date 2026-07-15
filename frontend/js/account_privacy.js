@@ -27,7 +27,7 @@ async function changeUsername() {
     const userId = localStorage.getItem("userId");
 
     if (!userId) {
-        window.location.href = "../login/login.html";
+        window.location.href = "../pages/login.html";
         return;
     }
 
@@ -112,7 +112,7 @@ async function deleteAccount() {
 
             alert("Account deleted");
 
-            window.location.href = "../login/login.html";
+            window.location.href = "../pages/login.html";
 
         } else {
 
