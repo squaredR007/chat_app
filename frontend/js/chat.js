@@ -443,6 +443,27 @@ function escapeRegex(text) {
     return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+async function loadUserBackground(){
+    try {
+        const response = await fetch(`${API_BASE}/user/info?userId=${currentUserId}`);
+        const user = await response.json();
+
+        if (user.background) {
+            const background = document.querySelector(".top-background");
+
+            if (background) {
+                background.style.backgroundImage = `url(${user.background})`;
+                background.style.backgroundSize = "cover";
+                background.style.backgroundPosition = "center";
+            }
+        }
+
+    } catch(err){
+        console.error("Background loading error:", err);
+    }
+}
+
 // ── Init ──
+loadUserBackground();
 loadChatInfo();
 loadMessages(); // polling starts inside loadMessages() after initial load

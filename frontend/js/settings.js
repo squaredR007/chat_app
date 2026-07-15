@@ -4,7 +4,10 @@ const userId = localStorage.getItem("userId");
 const displayName = localStorage.getItem("displayName");
 
 // then set the fields
-document.querySelector(".display-name").textContent = displayName || username || "Unknown";
+const displayNameEl = document.querySelector(".display-name");
+if (displayNameEl) {
+    displayNameEl.textContent = displayName || username || "Unknown";
+    }
 document.addEventListener("DOMContentLoaded", () => {
 
     if (localStorage.getItem("theme") === "dark") {
