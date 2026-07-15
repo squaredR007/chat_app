@@ -64,12 +64,20 @@ public class SettingsController implements HttpHandler {
         }
     }
 
+    //Checking whether a required JSON field is empty or null
+    private String requireString(JsonObject body , String field) {
+        if (!body.has(field) || body.get(field).isJsonNull()) {
+            throw new RuntimeException("Missing required field: " + field) ;
+        }
+        return body.get(field).getAsString() ;
+    }
+
     //account change handle
     private void handleChangeNumber(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
 
-        String userId = body.get("userId").getAsString();
-        String number = body.get("number").getAsString();
+        String userId = requireString(body , "userId");
+        String number = requireString(body , "number");
 
         boolean result = settingsService.changeNumber(userId, number);
 
@@ -82,8 +90,8 @@ public class SettingsController implements HttpHandler {
     private void handleChangeUsername(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
 
-        String userId = body.get("userId").getAsString();
-        String username = body.get("username").getAsString();
+        String userId = requireString(body , "userId");
+        String username = requireString(body , "username");
 
         boolean result = settingsService.changeUsername(userId, username);
 
@@ -96,8 +104,8 @@ public class SettingsController implements HttpHandler {
     private void handleChangePassword(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
 
-        String userId = body.get("userId").getAsString();
-        String password = body.get("password").getAsString();
+        String userId = requireString(body , "userId");
+        String password = requireString(body , "password");
 
         boolean result = settingsService.changePassword(userId, password);
 
@@ -110,8 +118,8 @@ public class SettingsController implements HttpHandler {
     private void handleChangeBackground(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
 
-        String userId = body.get("userId").getAsString();
-        String background = body.get("background").getAsString();
+        String userId = requireString(body , "userId");
+        String background = requireString(body , "background");
 
         boolean result = settingsService.changeBackground(userId, background);
 
@@ -124,7 +132,7 @@ public class SettingsController implements HttpHandler {
     private void handleDeleteAccount(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
 
-        String userId = body.get("userId").getAsString();
+        String userId = requireString(body , "userId");
 
         boolean result = settingsService.deletedAccount(userId);
 
@@ -138,8 +146,8 @@ public class SettingsController implements HttpHandler {
     private void handleChangeProfileImage(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
 
-        String userId = body.get("userId").getAsString();
-        String profileImage = body.get("profileImage").getAsString();
+        String userId = requireString(body , "userId");
+        String profileImage = requireString(body , "profileImage");
 
         boolean result = settingsService.changeProfileImage(userId, profileImage);
 
@@ -152,8 +160,8 @@ public class SettingsController implements HttpHandler {
     private void handleChangeDisplayName(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
 
-        String userId = body.get("userId").getAsString();
-        String newName = body.get("newName").getAsString();
+        String userId = requireString(body , "userId");
+        String newName = requireString(body , "newName");
 
         boolean result = settingsService.changeDisplayName(userId, newName);
 
@@ -166,8 +174,8 @@ public class SettingsController implements HttpHandler {
     private void handleChangeBiography(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
 
-        String userId = body.get("userId").getAsString();
-        String biography = body.get("biography").getAsString();
+        String userId = requireString(body , "userId");
+        String biography = requireString(body , "biography");
 
         boolean result = settingsService.changeBiography(userId, biography);
 
@@ -182,7 +190,10 @@ public class SettingsController implements HttpHandler {
     private void handleChangeDarkMode(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
 
-        String userId = body.get("userId").getAsString();
+        String userId = requireString(body , "userId");
+        if (!body.has("darkmode") || body.get("darkmode").isJsonNull()) {
+            throw new RuntimeException("Missing required field: darkmode") ;
+        }
         boolean darkMode = body.get("darkmode").getAsBoolean();
 
         boolean result = settingsService.changeDarkMode(userId, darkMode);
