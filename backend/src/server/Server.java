@@ -22,7 +22,7 @@ import CLI.AdminCLI;
 
 public class Server {
 
-    private static final int PORT = 7600 ;
+    private static final int PORT = 8080 ;
 
     public static void main (String[] args) throws IOException{
         //Repositories cause for phase 1 we use in-memory storage
