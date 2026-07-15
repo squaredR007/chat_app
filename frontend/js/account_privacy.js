@@ -8,11 +8,12 @@ document.addEventListener("DOMContentLoaded", () => {
         input.disabled = true;
     });
 
+    loadUserInfo();
 });
 
 let editing = false;
 
-function toggleEdit() {
+async function toggleEdit() {
 
     editing = !editing;
 
@@ -20,6 +21,11 @@ function toggleEdit() {
         input.disabled = !editing;
     });
 
+    if (!editing) {
+        await changeUsername();
+        await changeNumber();
+        await changePassword();
+    }
 }
 
 async function changeUsername() {
@@ -49,6 +55,9 @@ async function changeUsername() {
         const data = await response.json();
 
         alert(data.success ? "Username updated" : "Failed to update username");
+        if(data.success){
+            document.getElementById("text-username").innerText = username;
+        }
 
     } catch (err) {
 
@@ -79,6 +88,9 @@ async function changeNumber() {
         const data = await response.json();
 
         alert(data.success ? "Number updated" : "Failed to update number");
+        if(data.success){
+            document.getElementById("text-number").innerText = number;
+        }
 
     } catch (err) {
 
@@ -119,6 +131,67 @@ async function deleteAccount() {
             alert("Failed to delete account");
 
         }
+
+    } catch (err) {
+
+        alert("Server error");
+
+    }
+
+}
+
+async function loadUserInfo() {
+
+    const userId = localStorage.getItem("userId");
+
+    if (!userId) {
+        window.location.href = "../pages/login.html";
+        return;
+    }
+
+    try {
+
+        const response = await fetch(`http://localhost:8080/api/user/info?userId=${userId}`);
+
+        const data = await response.json();
+
+        document.getElementById("input-username").value = data.username;
+        document.getElementById("input-number").value = data.number;
+
+        document.getElementById("text-username").innerText = data.username;
+        document.getElementById("text-number").innerText = data.number;
+
+    } catch (err) {
+
+        alert("Cannot load user info");
+
+    }
+
+}
+
+async function changePassword() {
+
+    const userId = localStorage.getItem("userId");
+    const password = document.getElementById("input-password").value;
+
+    if (!password) {
+        return;
+    }
+
+    try {
+
+        const response = await fetch("http://localhost:8080/api/settings/changePassword", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                userId,
+                password
+            })
+        });
+
+        const data = await response.json();
+
+        alert(data.success ? "Password updated" : "Failed to update password");
 
     } catch (err) {
 
