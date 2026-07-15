@@ -4,7 +4,7 @@
     const username = localStorage.getItem("username");
     const userId = localStorage.getItem("userId");
     if (!username || !userId) {
-        window.location.href = "login.html";
+        window.location.href = "../pages/login.html";
     }
 })();
 

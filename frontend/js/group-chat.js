@@ -7,7 +7,7 @@ const currentUsername = localStorage.getItem("username");
 const currentUserId = localStorage.getItem("userId");
 
 if (!currentUsername || !currentUserId) {
-    window.location.href = "login.html";
+    window.location.href = "../pages/login.html";
 }
 
 //Apply saved theme
@@ -20,7 +20,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const chatId = urlParams.get("chatId");
 
 if (!chatId) {
-    window.location.href = "home.html";
+    window.location.href = "../pages/home.html";
 }
 
 // DOM References
@@ -322,7 +322,7 @@ document.getElementById("leaveConfirmBtn").addEventListener("click", async () =>
             })
         });
         // Go back to home after leaving
-        window.location.href = "home.html";
+        window.location.href = ".../pages/home.html";
     } catch (err) {
         console.error("Failed to leave group:", err);
     }

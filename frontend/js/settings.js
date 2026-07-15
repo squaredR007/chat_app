@@ -20,5 +20,5 @@ function logout() {
     localStorage.removeItem("displayName");
 
     // redirect to login
-    window.location.href = "login.html";
+    window.location.href = "../pages/login.html";
 }
