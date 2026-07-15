@@ -34,6 +34,9 @@ public class SettingsController implements HttpHandler {
             } else if (path.equals("/api/settings/changeUsername") && method.equals("POST")) {
                 handleChangeUsername(exchange);
 
+            } else if (path.equals("/api/settings/changePassword") && method.equals("POST")) {
+                handleChangePassword(exchange);
+
             } else if (path.equals("/api/settings/changeBackground") && method.equals("POST")) {
                 handleChangeBackground(exchange);
 
@@ -83,6 +86,20 @@ public class SettingsController implements HttpHandler {
         String username = body.get("username").getAsString();
 
         boolean result = settingsService.changeUsername(userId, username);
+
+        JsonObject response = new JsonObject();
+        response.addProperty("success", result);
+
+        HttpUtils.sendResponse(exchange, 200, response);
+    }
+
+    private void handleChangePassword(HttpExchange exchange) throws IOException {
+        JsonObject body = HttpUtils.readBody(exchange);
+
+        String userId = body.get("userId").getAsString();
+        String password = body.get("password").getAsString();
+
+        boolean result = settingsService.changePassword(userId, password);
 
         JsonObject response = new JsonObject();
         response.addProperty("success", result);
