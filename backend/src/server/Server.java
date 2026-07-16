@@ -10,11 +10,8 @@ import repository.ChatRepository;
 import repository.GroupRepository;
 import repository.MessageRepository;
 import repository.UserRepository;
-import service.ChatService;
-import service.GroupService;
-import service.MessageService;
-import service.AuthService;
-import service.SettingsService;
+import service.*;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
@@ -23,7 +20,7 @@ import CLI.AdminCLI;
 public class Server {
 
     private static final int PORT = 8080 ;
-
+    private static final int WEBSOCKET_PORT = 8081 ;
     public static void main (String[] args) throws IOException{
         //Repositories cause for phase 1 we use in-memory storage
         ChatRepository chatRepository = new ChatRepository() ;
@@ -31,10 +28,14 @@ public class Server {
         MessageRepository messageRepository = new MessageRepository() ;
         UserRepository userRepository = new UserRepository() ;
 
+        //Starting the websocket server so it can accept connections
+        WebSocketHandler webSocketHandler = new WebSocketHandler();
+        webSocketHandler.start(WEBSOCKET_PORT);
+
         //Services (business logic)
         ChatService chatService = new ChatService(chatRepository , userRepository);
         GroupService groupService = new GroupService(groupRepository , chatRepository);
-        MessageService messageService = new MessageService(messageRepository);
+        MessageService messageService = new MessageService(messageRepository , webSocketHandler);
         AuthService authService = new AuthService(userRepository , chatService);
         SettingsService settingsService = new SettingsService(userRepository);
 
@@ -53,5 +54,6 @@ public class Server {
         CLI.AdminCLI adminCLI = new CLI.AdminCLI(userRepository, groupRepository, groupService, messageService);
         new Thread(() -> adminCLI.start()).start();
         System.out.println("Server started on port " + PORT);
+        System.out.println("WebSocket server started on port " + WEBSOCKET_PORT);
     }
 }
