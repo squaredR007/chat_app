@@ -1,6 +1,8 @@
 package service;
 
+import com.google.gson.JsonObject;
 import model.Message ;
+import model.PrivateChat;
 import repository.MessageRepository ;
 
 import java.time.ZoneOffset;
@@ -13,6 +15,7 @@ import java.util.UUID ;
 public class MessageService {
 
     private MessageRepository messageRepository ;
+    private WebSocketHandler webSocketHandler ;
 
     //Prevents sending way too long messages
 
@@ -25,13 +28,41 @@ public class MessageService {
     //Constructor
 
     public MessageService (MessageRepository messageRepository) {
+        this(messageRepository , null) ;
+    }
+
+    //In phase 1 we used to send a REST every 5 second to update new messages by polling cause websocket was not implemented completely. But now we can use WebSocket for this aim .
+    public  MessageService (MessageRepository messageRepository , WebSocketHandler webSocketHandler) {
         this.messageRepository = messageRepository ;
+        this.webSocketHandler = webSocketHandler ;
+    }
+
+    public void setWebSocketHandler (WebSocketHandler webSocketHandler) {
+        this.webSocketHandler = webSocketHandler ;
     }
 
     //This method throws exception if the user tries to spam or send a way too long message
     //If the message is valid it would be sent
 
     public Message sendMessage (String chatId , String senderUsername , String content , Message.MessageType type) {
+        if (chatId == null || chatId.trim().isEmpty()) {
+            throw new RuntimeException("Chat id is required");
+        }
+        if (senderUsername == null || senderUsername.trim().isEmpty()) {
+            throw new RuntimeException("Sender is required");
+        }
+        if (type == null) {
+            type = Message.MessageType.TEXT;
+        }
+
+        if (type == Message.MessageType.TEXT) {
+            if (content == null || content.trim().isEmpty()) {
+                throw new RuntimeException("Message content cannot be empty");
+            }
+        }
+        if (content == null) {
+            content = "" ;
+        }
         if (content.length() > MAX_MESSAGE_LENGTH){
             throw new RuntimeException("The message is too long") ;
         }
@@ -43,6 +74,8 @@ public class MessageService {
         // Used UUID library to generate random ids for messages
         Message message = new Message(UUID.randomUUID().toString() , senderUsername , content , type) ;
         messageRepository.save(chatId , message);
+
+        broadcastEvent("new_message", chatId, message);
 
         return message ;
     }
@@ -66,10 +99,19 @@ public class MessageService {
     //The following method edits a message which will be found among other messages using its id and chatID as well
 
     public void editMessage (String chatId , String messageId , String newContent) {
+        if (newContent == null || newContent.trim().isEmpty()) {
+            throw new RuntimeException("New content cannot be empty");
+        }
+        if (newContent.length() > MAX_MESSAGE_LENGTH) {
+            throw new RuntimeException("The message is too long");
+        }
         Message m = messageRepository.findById(chatId , messageId) ;
         if (m == null)
             throw new RuntimeException("Message not found");
+        if (m.isDeleted())
+            throw new RuntimeException("Cannot edit a deleted message");
         m.editContent(newContent);
+        broadcastEvent("message_edited", chatId, m);
     }
 
     //The following method would delete a message (the content would be kept in history as it is written in Message class)
@@ -82,6 +124,8 @@ public class MessageService {
             throw new RuntimeException("You can only delete your own messages");
         }
         m.markAsDeleted();
+
+        broadcastEvent("message_deleted", chatId, m);
     }
 
     //The following method marks a message as reported message (Used by Admin CLI)
@@ -105,6 +149,28 @@ public class MessageService {
             }
         }
         return result;
+    }
+
+    private void broadcastEvent(String eventType, String chatId, Message message) {
+        if (webSocketHandler == null) return;
+        try {
+            JsonObject event = new JsonObject();
+            event.addProperty("event", eventType);
+            event.addProperty("chatId", chatId);
+
+            JsonObject msgJson = new JsonObject();
+            msgJson.addProperty("id", message.getId());
+            msgJson.addProperty("senderUsername", message.getSenderUsername());
+            msgJson.addProperty("content", message.getContent());
+            msgJson.addProperty("type", message.getType().toString());
+            msgJson.addProperty("deleted", message.isDeleted());
+            msgJson.addProperty("edited", message.isEdited());
+            event.add("message", msgJson);
+
+            webSocketHandler.broadcast(event.toString());
+        } catch (Exception e) {
+            System.err.println("Failed to broadcast WebSocket event: " + e.getMessage());
+        }
     }
 
     //The following method returns all of the messages of specific chat as a list since they should be visible when you open a chat

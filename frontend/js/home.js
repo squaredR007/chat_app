@@ -1,4 +1,4 @@
-// ── Force fresh session check before anything else ──
+// Force fresh session check before anything else
 // Runs immediately before any other code to prevent stale data
 (function() {
     const username = localStorage.getItem("username");
@@ -8,14 +8,14 @@
     }
 })();
 
-// ── Config ──
+// Config
 const API_BASE = "http://localhost:8080/api";
 
-// ── Read logged-in user from localStorage (set by login page) ──
+// Read logged-in user from localStorage (set by login page)
 const currentUsername = localStorage.getItem("username");
 const currentUserId = localStorage.getItem("userId");
 
-// ── DOM References ──
+// DOM References
 const chatList = document.getElementById("chatList");
 const searchInput = document.getElementById("searchInput");
 const currentUserAvatar = document.getElementById("currentUserAvatar");
@@ -23,7 +23,7 @@ const currentUserAvatar = document.getElementById("currentUserAvatar");
 // Show current user's initial in the sidebar avatar
 currentUserAvatar.textContent = currentUsername ? currentUsername.charAt(0).toUpperCase() : "?";
 
-// ── Theme Toggle ──
+// Theme Toggle
 const themeToggle = document.getElementById("themeToggle");
 
 const savedTheme = localStorage.getItem("theme");
@@ -53,13 +53,16 @@ themeToggle.addEventListener("click", () => {
     }
 });
 
-// ── State ──
+// State
 let allChats = [];
 
-// ── Fetch all chats from backend ──
+let showingArchived = false;
+
+// Fetch all chats from backend
+
 async function loadChats() {
     try {
-        const response = await fetch(`${API_BASE}/chat/list`);
+        const response = await fetch(`${API_BASE}/chat/list?username=${encodeURIComponent(currentUsername)}`);
 
         if (!response.ok) {
             throw new Error(`Server returned ${response.status}`);
@@ -68,61 +71,72 @@ async function loadChats() {
         const data = await response.json();
         allChats = Array.isArray(data) ? data : [];
 
-        const myChats = allChats.filter(chat => isMyChat(chat));
-
-        myChats.sort((a, b) => {
-            if (a.pinned && !b.pinned) return -1;
-            if (!a.pinned && b.pinned) return 1;
-            return 0;
-        });
-
-        renderChats(myChats);
+        renderCurrentView();
     } catch (error) {
         chatList.innerHTML = `<div class="empty-state">Could not connect to server.<br>Make sure the server is running.</div>`;
         console.error("Failed to load chats:", error);
     }
 }
 
-// ── Check if a chat belongs to the current user ──
-function isMyChat(chat) {
-    if (!chat || !chat.chatId) return false;
+// Picks the right list (recent vs. archived), sorts it, and renders it.
 
-    // Always show saved messages for current user
-    if (chat.chatId === `saved_${currentUsername}`) {
-        return true;
-    }
+function renderCurrentView() {
+    let visibleChats = allChats.filter(chat =>
+        showingArchived ? chat.archived : !chat.archived
+    );
 
-    // Private chat
-    if (chat.user1Username && chat.user2Username) {
-        return chat.user1Username === currentUsername ||
-               chat.user2Username === currentUsername;
-    }
+    visibleChats.sort((a, b) => {
+        if (a.pinned && !b.pinned) return -1;
+        if (!a.pinned && b.pinned) return 1;
+        return getLastMessageMillis(b) - getLastMessageMillis(a);
+    });
 
-    // Group chat
-    if (chat.group && chat.group.membersUsernames) {
-        return chat.group.membersUsernames.includes(currentUsername);
-    }
-
-    return false;
+    renderChats(visibleChats);
 }
 
-// ── Render the chat list ──
+function getLastMessageMillis(chat) {
+    const messages = chat.messages;
+    if (!messages || messages.length === 0) return 0;
+    const last = messages[messages.length - 1];
+    if (!last.timestamp || !Array.isArray(last.timestamp)) return 0;
+    const [year, month, day, hour, minute, second] = last.timestamp;
+    return new Date(year, month - 1, day, hour, minute, second || 0).getTime();
+}
+
+// Render the chat list
 function renderChats(chats) {
     chatList.innerHTML = "";
 
-    const archiveRow = document.createElement("a");
-    archiveRow.href = "#";
-    archiveRow.className = "archive-row";
-    archiveRow.innerHTML = `
-        <span class="archive-icon">🗂️</span>
-        <span>Archived Chats</span>
-    `;
-    chatList.appendChild(archiveRow);
+    if (showingArchived) {
+        const backRow = document.createElement("a");
+        backRow.href = "#";
+        backRow.className = "archive-row";
+        backRow.innerHTML = `<span class="archive-icon">←</span><span>Back to chats</span>`;
+        backRow.addEventListener("click", (e) => {
+            e.preventDefault();
+            showingArchived = false;
+            renderCurrentView();
+        });
+        chatList.appendChild(backRow);
+    } else {
+        const archiveRow = document.createElement("a");
+        archiveRow.href = "#";
+        archiveRow.className = "archive-row";
+        archiveRow.innerHTML = `<span class="archive-icon">🗂️</span><span>Archived Chats</span>`;
+        archiveRow.addEventListener("click", (e) => {
+            e.preventDefault();
+            showingArchived = true;
+            renderCurrentView();
+        });
+        chatList.appendChild(archiveRow);
+    }
 
     if (chats.length === 0) {
         const empty = document.createElement("div");
         empty.className = "empty-state";
-        empty.innerHTML = "No conversations yet.<br>Start a new one!";
+        empty.innerHTML = showingArchived
+            ? "No archived chats."
+            : "No conversations yet.<br>Start a new one!";
         chatList.appendChild(empty);
         return;
     }
@@ -133,7 +147,7 @@ function renderChats(chats) {
     });
 }
 
-// ── Create a single chat list item ──
+// Create a single chat list item
 function createChatItem(chat) {
     const isSaved = chat.chatId === `saved_${currentUsername}`;
     const isGroup = chat.group != null;
@@ -160,16 +174,16 @@ function createChatItem(chat) {
     const item = document.createElement("a");
 
     if (isGroup) {
-        item.href = `group-chat.html?chatId=${chat.chatId}`;
+        item.href = `group-chat.html?chatId=${encodeURIComponent(chat.chatId)}`;
     } else {
-        item.href = `chat.html?chatId=${chat.chatId}`;
+        item.href = `chat.html?chatId=${encodeURIComponent(chat.chatId)}`;
     }
 
     item.className = `chat-item${chat.pinned ? " pinned" : ""}`;
     item.innerHTML = `
         <div class="${avatarClass}">${isSaved ? "⭐" : avatarLetter}</div>
         <div class="chat-info">
-            <div class="chat-name">${displayName}</div>
+            <div class="chat-name">${escapeHtml(displayName || "")}</div>
             <div class="chat-preview">${getLastMessagePreview(chat)}</div>
         </div>
         <div class="chat-meta">
@@ -188,24 +202,21 @@ function getLastMessagePreview(chat) {
     const last = messages[messages.length - 1];
     if (last.deleted) return "🚫 Message deleted";
     if (last.type === "MEDIA") return "📎 Media";
-    return last.content ? last.content.substring(0, 40) : "";
+    return last.content ? escapeHtml(last.content.substring(0, 40)) : "";
 }
 
-// ── Get last message time ──
+// Get last message time
 function getLastMessageTime(chat) {
     const messages = chat.messages;
     if (!messages || messages.length === 0) return "";
     const last = messages[messages.length - 1];
-    if (!last.timestamp) return "";
-    if (Array.isArray(last.timestamp)) {
-        const [year, month, day, hour, minute] = last.timestamp;
-        const date = new Date(year, month - 1, day, hour, minute);
-        return formatTime(date);
-    }
-    return "";
+    if (!last.timestamp || !Array.isArray(last.timestamp)) return "";
+    const [year, month, day, hour, minute] = last.timestamp;
+    const date = new Date(year, month - 1, day, hour, minute);
+    return formatTime(date);
 }
 
-// ── Format time ──
+// Format time
 function formatTime(date) {
     const now = new Date();
     const isToday = date.toDateString() === now.toDateString();
@@ -215,29 +226,37 @@ function formatTime(date) {
     return date.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
-// ── Search filtering ──
+function escapeHtml(text) {
+    if (!text) return "";
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+// Search filtering
 searchInput.addEventListener("input", () => {
     const query = searchInput.value.trim().toLowerCase();
+    const base = allChats.filter(chat => showingArchived ? chat.archived : !chat.archived);
+
     if (!query) {
-        renderChats(allChats.filter(chat => isMyChat(chat)));
+        renderChats(base);
         return;
     }
-    const filtered = allChats.filter(chat => {
-        if (!isMyChat(chat)) return false;
-        return getDisplayName(chat).toLowerCase().includes(query);
-    });
+    const filtered = base.filter(chat => getDisplayName(chat).toLowerCase().includes(query));
     renderChats(filtered);
 });
 
-// ── Helper to get display name ──
+// Helper to get display name
 function getDisplayName(chat) {
     if (chat.chatId && chat.chatId.startsWith("saved_")) return "Saved Messages";
     if (chat.group) return chat.group.groupName || "";
     return chat.user1Username === currentUsername ? chat.user2Username : chat.user1Username;
 }
 
-// ── Poll for new chats every 3 seconds ──
+// Poll for new chats every 3 seconds
 setInterval(loadChats, 3000);
 
-// ── Initial load ──
+// Initial load
 loadChats();

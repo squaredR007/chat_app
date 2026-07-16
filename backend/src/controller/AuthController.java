@@ -38,17 +38,29 @@ public class AuthController implements HttpHandler {
                 HttpUtils.sendError(exchange, 404, "Endpoint not found");
             }
         } catch (RuntimeException e) {
-            HttpUtils.sendError(exchange, 400, e.getMessage());
+            HttpUtils.sendError(exchange, 400, e.getMessage() != null ? e.getMessage() : "Bad Request");
         }
+    }
+
+    //Checking whether a required JSON field is empty or null
+    private String requireString(JsonObject body , String field) {
+        if (!body.has(field) || body.get(field).isJsonNull()) {
+            throw new RuntimeException("Missing required field: " + field) ;
+        }
+        String value = body.get(field).getAsString() ;
+        if (value == null || value.trim().isEmpty()) {
+            throw new RuntimeException("Field cannot be empty: " + field) ;
+        }
+        return value ;
     }
 
     //handle user signup
     private void handleSignup(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
 
-        String username = body.get("username").getAsString();
-        String password = body.get("password").getAsString();
-        String number = body.get("number").getAsString();
+        String username = requireString(body , "username");
+        String password = requireString(body , "password");
+        String number = requireString(body , "number");
 
         boolean result = authService.signup(username, password, number);
 
@@ -57,9 +69,13 @@ public class AuthController implements HttpHandler {
         if (result) {
             // return user info so frontend can store it immediately
             User user = userRepository.getByUsername(username);
-            response.addProperty("userId", user.getUserId());
-            response.addProperty("username", user.getUsername());
-            response.addProperty("displayName", user.getDisplayName() != null ? user.getDisplayName() : username);
+            if (user != null) {
+                response.addProperty("userId", user.getUserId());
+                response.addProperty("username", user.getUsername());
+                response.addProperty("displayName", user.getDisplayName() != null ? user.getDisplayName() : username);
+            }
+        } else {
+            response.addProperty("error" , "Signup failed. Username/number may already be taken, or the password may be invalid");
         }
 
         HttpUtils.sendResponse(exchange, 200, response);
@@ -69,8 +85,8 @@ public class AuthController implements HttpHandler {
     private void handleLogin(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
 
-        String username = body.get("username").getAsString();
-        String password = body.get("password").getAsString();
+        String username = requireString(body , "username");
+        String password = requireString(body , "password");
 
         boolean result = authService.login(username, password);
 
@@ -81,9 +97,13 @@ public class AuthController implements HttpHandler {
             // turning back users info to be saved in local storage
 
             User user = userRepository.getByUsername(username);
-            response.addProperty("userId", user.getUserId());
-            response.addProperty("username", user.getUsername());
-            response.addProperty("displayName", user.getDisplayName() != null ? user.getDisplayName() : username);
+            if (user != null) {
+                response.addProperty("userId", user.getUserId());
+                response.addProperty("username", user.getUsername());
+                response.addProperty("displayName", user.getDisplayName() != null ? user.getDisplayName() : username);
+            }
+        } else {
+            response.addProperty("error" , "Wrong username or password, or the account is temporarily locked.");
         }
 
         HttpUtils.sendResponse(exchange, 200, response);

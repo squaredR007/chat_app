@@ -39,18 +39,31 @@ public class GroupController implements HttpHandler {
                 HttpUtils.sendError(exchange, 404, "Endpoint not found");
             }
         } catch (RuntimeException e) {
-            HttpUtils.sendError(exchange, 400, e.getMessage());
+            HttpUtils.sendError(exchange, 400, e.getMessage() != null ? e.getMessage() : "Bad Request");
         }
+    }
+
+    //Checking whether a required JSON field is empty or null
+
+    private String requireString(JsonObject body, String field) {
+        if (!body.has(field) || body.get(field).isJsonNull()) {
+            throw new RuntimeException("Missing required field: " + field);
+        }
+        String value = body.get(field).getAsString();
+        if (value == null || value.trim().isEmpty()) {
+            throw new RuntimeException("Field cannot be empty: " + field);
+        }
+        return value;
     }
 
     //Creating a group
 
     private void handleCreateGroup(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
-        String groupId = body.get("groupId").getAsString();
-        String chatId = body.get("chatId").getAsString();
-        String groupName = body.get("groupName").getAsString();
-        String adminUsername = body.get("adminUsername").getAsString();
+        String groupId = requireString(body , "groupId");
+        String chatId = requireString(body , "chatId");
+        String groupName = requireString(body , "groupName");
+        String adminUsername = requireString(body , "adminUsername");
 
         groupService.creatGroup(groupId, chatId, groupName, adminUsername);
 
@@ -63,8 +76,8 @@ public class GroupController implements HttpHandler {
 
     private void handleAddMember(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
-        String groupId = body.get("groupId").getAsString();
-        String username = body.get("username").getAsString();
+        String groupId = requireString(body , "groupId");
+        String username = requireString(body , "username");
 
         groupService.addMember(groupId, username);
 
@@ -77,8 +90,8 @@ public class GroupController implements HttpHandler {
 
     private void handleRemoveMember(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
-        String groupId = body.get("groupId").getAsString();
-        String username = body.get("username").getAsString();
+        String groupId = requireString(body ,"groupId");
+        String username = requireString(body , "username");
 
         groupService.removeMember(groupId, username);
 
@@ -88,10 +101,15 @@ public class GroupController implements HttpHandler {
     }
 
     //Returning groups data's
+    //Fixed item : there was a bug here in this method which was avoiding members count to be sent to front which is fixed now
 
     private void handleGetGroupInfo(HttpExchange exchange) throws IOException {
         String query = exchange.getRequestURI().getQuery();
         JsonObject queryParams = HttpUtils.parseQueryString(query);
+        if (!queryParams.has("groupId") || queryParams.get("groupId").getAsString().isEmpty()) {
+            HttpUtils.sendError(exchange , 400 , "Missing required query parameter: groupId");
+            return;
+        }
         String groupId = queryParams.get("groupId").getAsString();
 
         Group group = groupService.getGroup(groupId);
@@ -104,15 +122,19 @@ public class GroupController implements HttpHandler {
         response.addProperty("groupId" , group.getGroupId());
         response.addProperty("groupName" , group.getGroupName());
         response.addProperty("adminUsername", group.getAdminUsername());
-        response.addProperty("memberCount", group.getMembersUsernames().size());
+        response.addProperty("description", group.getDescription());
+        response.addProperty("groupPhotoPath", group.getGroupPhotoPath());
+        response.addProperty("memberCount", group.getMembersUsernames() != null ? group.getMembersUsernames().size() : 0);
 
         com.google.gson.JsonArray membersArray = new com.google.gson.JsonArray();
-        for (String member : group.getMembersUsernames()) {
-            membersArray.add(member);
+        if (group.getMembersUsernames() != null) {
+            for (String member : group.getMembersUsernames()) {
+                membersArray.add(member);
+            }
         }
         response.add("membersUsernames", membersArray);
 
 
-        HttpUtils.sendResponse(exchange, 200, group);
+        HttpUtils.sendResponse(exchange, 200, response);
     }
 }

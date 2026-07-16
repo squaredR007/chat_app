@@ -7,6 +7,12 @@ const currentUsername = localStorage.getItem("username");
 const currentUserId = localStorage.getItem("userId");
 
 if (!currentUsername || !currentUserId) {
+    window.location.href = "login.html";
+}
+
+// Apply saved theme
+if (localStorage.getItem("theme") === "dark") {
+    document.body.classList.add("dark");
     window.location.href = "../pages/login.html";
 }
 
@@ -39,50 +45,61 @@ const addMemberInput = document.getElementById("addMemberInput");
 const addMemberBtn = document.getElementById("addMemberBtn");
 const leaveGroupBtn = document.getElementById("leaveGroupBtn");
 
-//State
+// State
 let allMessages = [];
-let lastPollTimestamp = 0;
+let lastPollTimestamp = Date.now();
+let pollInterval = null;
 let editingMessageId = null;
 let deletingMessageId = null;
 let currentGroup = null; // the Group object for this chat
+// FIX: this Set didn't exist before, so the poll loop could re-add messages
+// (including ones we just sent ourselves) and show duplicates on screen.
+const seenMessageIds = new Set();
 
-//Load group info
+// Load group info
+// FIX: now passes ?username= so the server only returns chats this user is
+// actually part of, instead of the entire chat database.
 async function loadGroupInfo() {
     try {
-        const response = await fetch(`${API_BASE}/chat/list`);
+        const response = await fetch(`${API_BASE}/chat/list?username=${encodeURIComponent(currentUsername)}`);
         const chats = await response.json();
+        const chat = Array.isArray(chats) ? chats.find(c => c.chatId === chatId) : null;
 
-        const chat = chats.find(c => c.chatId === chatId);
         if (!chat || !chat.group) {
             headerName.textContent = "Group";
             return;
         }
+        const groupId = chat.group.groupId;
+        const groupResponse = await fetch(`${API_BASE}/group/info?groupId=${encodeURIComponent(groupId)}`);
+        if (!groupResponse.ok) {
+            headerName.textContent = "Group";
+            return;
+        }
 
-        currentGroup = chat.group;
+    
+        currentGroup = await groupResponse.json();
 
         // Update header
         headerName.textContent = currentGroup.groupName;
         headerAvatar.textContent = currentGroup.groupName.charAt(0).toUpperCase();
-        const memberCount = currentGroup.membersUsernames
-            ? currentGroup.membersUsernames.length
-            : 0;
-        headerStatus.textContent = `${memberCount} member${memberCount !== 1 ? "s" : ""}`;
+        headerStatus.textContent = `${currentGroup.memberCount} member${currentGroup.memberCount !== 1 ? "s" : ""}`;
 
         // Update info panel
         document.getElementById("infoGroupAvatar").textContent =
             currentGroup.groupName.charAt(0).toUpperCase();
         document.getElementById("infoGroupName").textContent = currentGroup.groupName;
         document.getElementById("infoGroupId").textContent = `ID: ${currentGroup.groupId}`;
+
+       
         document.getElementById("memberCountLabel").textContent =
-            `Members · ${memberCount}`;
+            `Members · ${currentGroup.memberCount}`;
 
         // Render member list
         renderMembers(currentGroup);
 
         // Show add member button only if current user is admin
-        if (currentGroup.adminUsername === currentUsername) {
-            addMemberSection.style.display = "flex";
-        }
+        addMemberSection.style.display =
+            currentGroup.adminUsername === currentUsername ? "flex" : "none";
 
     } catch (err) {
         headerName.textContent = "Group";
@@ -90,7 +107,7 @@ async function loadGroupInfo() {
     }
 }
 
-//Render member list in info panel
+// Render member list in info panel
 function renderMembers(group) {
     memberList.innerHTML = "";
     const members = group.membersUsernames || [];
@@ -103,7 +120,7 @@ function renderMembers(group) {
         item.className = "member-item";
         item.innerHTML = `
             <div class="member-avatar">${username.charAt(0).toUpperCase()}</div>
-            <div class="member-name">${username}${isMe ? " (you)" : ""}</div>
+            <div class="member-name">${escapeHtml(username)}${isMe ? " (you)" : ""}</div>
             ${isAdmin ? `<span class="admin-badge">Admin</span>` : ""}
         `;
         memberList.appendChild(item);
@@ -113,13 +130,20 @@ function renderMembers(group) {
 // Load all messages
 async function loadMessages() {
     try {
-        const response = await fetch(`${API_BASE}/chat/messages?chatId=${chatId}`);
+        const response = await fetch(`${API_BASE}/chat/messages?chatId=${encodeURIComponent(chatId)}`);
         const messages = await response.json();
 
-        allMessages = messages;
+        allMessages = Array.isArray(messages) ? messages : [];
+        // FIX: track ids so pollNewMessages() below doesn't add them a second time
+        allMessages.forEach(m => seenMessageIds.add(m.id));
         lastPollTimestamp = Date.now();
+
         renderMessages(allMessages);
         scrollToBottom();
+
+        if (!pollInterval) {
+            pollInterval = setInterval(pollNewMessages, POLL_INTERVAL);
+        }
     } catch (err) {
         messagesArea.innerHTML = `<div class="empty-state">Could not connect to server.<br>Make sure the server is running.</div>`;
         console.error("Failed to load messages:", err);
@@ -127,17 +151,23 @@ async function loadMessages() {
 }
 
 // Poll for new messages
+
 async function pollNewMessages() {
     try {
-        const response = await fetch(`${API_BASE}/chat/poll?chatId=${chatId}&since=${lastPollTimestamp}`);
+        const response = await fetch(`${API_BASE}/chat/poll?chatId=${encodeURIComponent(chatId)}&since=${lastPollTimestamp}`);
         const newMessages = await response.json();
 
-        if (newMessages && newMessages.length > 0) {
-            allMessages = [...allMessages, ...newMessages];
-            lastPollTimestamp = Date.now();
-            renderMessages(allMessages);
-            scrollToBottom();
-        }
+        if (!Array.isArray(newMessages) || newMessages.length === 0) return;
+
+        const trulyNew = newMessages.filter(m => !seenMessageIds.has(m.id));
+        if (trulyNew.length === 0) return;
+
+        lastPollTimestamp = Date.now();
+        trulyNew.forEach(m => seenMessageIds.add(m.id));
+
+        allMessages = [...allMessages, ...trulyNew];
+        renderMessages(allMessages);
+        scrollToBottom();
     } catch (err) {
         console.error("Poll failed:", err);
     }
@@ -186,12 +216,12 @@ function createMessageBubble(msg) {
         ? `<div class="sender-name">${escapeHtml(msg.senderUsername)}</div>`
         : "";
 
-    // Action buttons
+  
     let actionsHtml = "";
     if (isMine && !isDeleted) {
         actionsHtml = `
             <div class="bubble-actions">
-                <button class="action-btn" onclick="openEditDialog('${msg.id}', \`${escapeHtml(msg.content)}\`)">Edit</button>
+                <button class="action-btn" onclick="openEditDialog('${msg.id}')">Edit</button>
                 <button class="action-btn danger" onclick="openDeleteDialog('${msg.id}')">Delete</button>
                 <button class="action-btn" onclick="reportMessage('${msg.id}')">Report</button>
             </div>
@@ -235,6 +265,13 @@ async function sendMessage() {
             })
         });
 
+        if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            alert(errData.error || "Failed to send message.");
+            messageInput.value = content;
+            return;
+        }
+
         const data = await response.json();
         if (data.messageId) {
             const newMessage = {
@@ -246,6 +283,7 @@ async function sendMessage() {
                 edited: false,
                 deleted: false
             };
+            seenMessageIds.add(data.messageId); // FIX: prevents the poll loop from re-adding this message
             allMessages.push(newMessage);
             renderMessages(allMessages);
             scrollToBottom();
@@ -253,6 +291,7 @@ async function sendMessage() {
     } catch (err) {
         console.error("Failed to send message:", err);
         alert("Failed to send message. Is the server running?");
+        messageInput.value = content;
     }
 }
 
@@ -272,7 +311,7 @@ closePanelBtn.addEventListener("click", () => {
 // Add member
 addMemberBtn.addEventListener("click", async () => {
     const username = addMemberInput.value.trim();
-    if (!username) return;
+    if (!username || !currentGroup) return;
 
     try {
         const response = await fetch(`${API_BASE}/group/addMember`, {
@@ -284,16 +323,18 @@ addMemberBtn.addEventListener("click", async () => {
             })
         });
         const data = await response.json();
-        if (data.status === "member added") {
+        if (response.ok && data.status === "member added") {
             addMemberInput.value = "";
             // Refresh group info
             await loadGroupInfo();
             alert(`${username} added to the group!`);
         } else {
-            alert("Failed to add member.");
+            
+            alert(data.error || "Failed to add member.");
         }
     } catch (err) {
         console.error("Failed to add member:", err);
+        alert("Could not connect to server.");
     }
 });
 
@@ -306,9 +347,11 @@ document.getElementById("leaveCancelBtn").addEventListener("click", () => {
     document.getElementById("leaveDialog").style.display = "none";
 });
 
+
 document.getElementById("leaveConfirmBtn").addEventListener("click", async () => {
+    if (!currentGroup) return;
     try {
-        await fetch(`${API_BASE}/group/removeMember`, {
+        const response = await fetch(`${API_BASE}/group/removeMember`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -316,17 +359,25 @@ document.getElementById("leaveConfirmBtn").addEventListener("click", async () =>
                 username: currentUsername
             })
         });
-        // Go back to home after leaving
+        if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            alert(errData.error || "Failed to leave the group.");
+            return;
+        }
         window.location.href = "../pages/home.html";
     } catch (err) {
         console.error("Failed to leave group:", err);
+        alert("Could not connect to server.");
     }
 });
 
 // Edit message dialog
-function openEditDialog(messageId, currentContent) {
+
+function openEditDialog(messageId) {
+    const msg = allMessages.find(m => m.id === messageId);
+    if (!msg) return;
     editingMessageId = messageId;
-    document.getElementById("editInput").value = currentContent;
+    document.getElementById("editInput").value = msg.content || "";
     document.getElementById("editDialog").style.display = "flex";
 }
 
@@ -414,7 +465,7 @@ async function reportMessage(messageId) {
     }
 }
 
-//Message search
+// Message search
 searchToggleBtn.addEventListener("click", () => {
     const isVisible = messageSearchBar.style.display !== "none";
     messageSearchBar.style.display = isVisible ? "none" : "flex";
@@ -463,10 +514,10 @@ messageInput.addEventListener("keydown", (e) => {
 
 sendBtn.addEventListener("click", sendMessage);
 
-//File attach placeholder
+// File attach placeholder (upload endpoint not implemented yet)
 fileInput.addEventListener("change", () => {
     if (fileInput.files.length > 0) {
-        alert(`File "${fileInput.files[0].name}" selected. File upload will be implemented in Phase 2.`);
+        alert(`File "${fileInput.files[0].name}" selected. File upload is not implemented yet.`);
         fileInput.value = "";
     }
 });
@@ -516,7 +567,6 @@ function escapeRegex(text) {
     return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-//  Init
+// Init
 loadGroupInfo();
 loadMessages();
-setInterval(pollNewMessages, POLL_INTERVAL);

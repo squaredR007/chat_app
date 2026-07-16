@@ -44,12 +44,14 @@ let otherUsername = null;
 const seenMessageIds = new Set();
 
 // ── Load chat info ──
+// FIX: now passes ?username= so the server only returns chats this user is
+// actually part of (see ChatController), instead of the entire chat database.
 async function loadChatInfo() {
     try {
-        const response = await fetch(`${API_BASE}/chat/list`);
+        const response = await fetch(`${API_BASE}/chat/list?username=${encodeURIComponent(currentUsername)}`);
         const chats = await response.json();
 
-        const chat = chats.find(c => c.chatId === chatId);
+        const chat = Array.isArray(chats) ? chats.find(c => c.chatId === chatId) : null;
         if (!chat) {
             headerName.textContent = "Unknown Chat";
             return;
@@ -67,7 +69,7 @@ async function loadChatInfo() {
                 ? chat.user2Username
                 : chat.user1Username;
             headerName.textContent = otherUsername;
-            headerAvatar.textContent = otherUsername.charAt(0).toUpperCase();
+            headerAvatar.textContent = otherUsername ? otherUsername.charAt(0).toUpperCase() : "?";
             headerStatus.textContent = "last seen recently";
         }
     } catch (err) {
@@ -79,7 +81,7 @@ async function loadChatInfo() {
 // ── Load all messages (initial load only) ──
 async function loadMessages() {
     try {
-        const response = await fetch(`${API_BASE}/chat/messages?chatId=${chatId}`);
+        const response = await fetch(`${API_BASE}/chat/messages?chatId=${encodeURIComponent(chatId)}`);
         const messages = await response.json();
 
         allMessages = Array.isArray(messages) ? messages : [];
@@ -106,7 +108,7 @@ async function loadMessages() {
 // ── Poll for NEW messages only ──
 async function pollNewMessages() {
     try {
-        const response = await fetch(`${API_BASE}/chat/poll?chatId=${chatId}&since=${lastPollTimestamp}`);
+        const response = await fetch(`${API_BASE}/chat/poll?chatId=${encodeURIComponent(chatId)}&since=${lastPollTimestamp}`);
         const newMessages = await response.json();
 
         if (!Array.isArray(newMessages) || newMessages.length === 0) return;
@@ -166,11 +168,15 @@ function createMessageBubble(msg) {
         ? `<span class="edited-tag">edited</span>`
         : "";
 
+    // FIX: action buttons now only carry the message id (a safe UUID) instead of
+    // embedding the raw message content inside an inline onclick string. Before,
+    // a message containing a backtick or ${...} could break the page's JS or be
+    // used to inject unexpected onclick behaviour.
     let actionsHtml = "";
     if (isMine && !isDeleted) {
         actionsHtml = `
             <div class="bubble-actions">
-                <button class="action-btn" onclick="openEditDialog('${msg.id}', \`${escapeHtml(msg.content)}\`)">Edit</button>
+                <button class="action-btn" onclick="openEditDialog('${msg.id}')">Edit</button>
                 <button class="action-btn danger" onclick="openDeleteDialog('${msg.id}')">Delete</button>
                 <button class="action-btn" onclick="reportMessage('${msg.id}')">Report</button>
             </div>
@@ -214,6 +220,15 @@ async function sendMessage() {
             })
         });
 
+        // FIX: previously any non-2xx response was still parsed as if it succeeded;
+        // the server's actual error message (e.g. "Too many messages") never reached the user.
+        if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            alert(errData.error || "Failed to send message.");
+            messageInput.value = content; // give the text back so it isn't lost
+            return;
+        }
+
         const data = await response.json();
         if (data.messageId) {
             // Add locally and mark as seen so poll doesn't add it again
@@ -234,13 +249,18 @@ async function sendMessage() {
     } catch (err) {
         console.error("Failed to send message:", err);
         alert("Failed to send message. Is the server running?");
+        messageInput.value = content;
     }
 }
 
 // ── Edit message dialog ──
-function openEditDialog(messageId, currentContent) {
+// FIX: content is now looked up from allMessages by id instead of being passed
+// through the inline onclick string (see createMessageBubble above).
+function openEditDialog(messageId) {
+    const msg = allMessages.find(m => m.id === messageId);
+    if (!msg) return;
     editingMessageId = messageId;
-    document.getElementById("editInput").value = currentContent;
+    document.getElementById("editInput").value = msg.content || "";
     document.getElementById("editDialog").style.display = "flex";
 }
 
@@ -254,7 +274,7 @@ document.getElementById("editConfirmBtn").addEventListener("click", async () => 
     if (!newContent || !editingMessageId) return;
 
     try {
-        await fetch(`${API_BASE}/chat/edit`, {
+        const response = await fetch(`${API_BASE}/chat/edit`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -263,6 +283,12 @@ document.getElementById("editConfirmBtn").addEventListener("click", async () => 
                 newContent: newContent
             })
         });
+
+        if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            alert(errData.error || "Failed to edit message.");
+            return;
+        }
 
         const msg = allMessages.find(m => m.id === editingMessageId);
         if (msg) {
@@ -381,10 +407,10 @@ messageInput.addEventListener("keydown", (e) => {
 // ── Send button ──
 sendBtn.addEventListener("click", sendMessage);
 
-// ── File attach placeholder ──
+// ── File attach placeholder (upload endpoint not implemented yet) ──
 fileInput.addEventListener("change", () => {
     if (fileInput.files.length > 0) {
-        alert(`File "${fileInput.files[0].name}" selected. File upload will be implemented in Phase 2.`);
+        alert(`File "${fileInput.files[0].name}" selected. File upload is not implemented yet.`);
         fileInput.value = "";
     }
 });

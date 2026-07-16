@@ -65,13 +65,13 @@ public class SettingsController implements HttpHandler {
     }
 
     //Checking whether a required JSON field is empty or null
+
     private String requireString(JsonObject body , String field) {
         if (!body.has(field) || body.get(field).isJsonNull()) {
             throw new RuntimeException("Missing required field: " + field) ;
         }
         return body.get(field).getAsString() ;
     }
-
     //account change handle
     private void handleChangeNumber(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);

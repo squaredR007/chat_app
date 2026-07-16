@@ -17,7 +17,7 @@ public class Group {
         this.groupId = groupId ;
         this.groupName = groupName ;
         this.adminUsername = adminUsername ;
-        membersUsernames = new ArrayList<>() ;
+        membersUsernames = new ArrayList<>();
         membersUsernames.add(adminUsername) ;
     }
 
