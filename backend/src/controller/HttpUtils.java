@@ -91,6 +91,22 @@ public class HttpUtils {
         os.close();
     }
 
+    // NEW: sends raw bytes back with a given Content-Type instead of wrapping
+    // them in JSON.
+    public static void sendFile(HttpExchange exchange, byte[] fileBytes, String contentType) throws IOException {
+        exchange.getResponseHeaders().set("Content-Type", contentType != null ? contentType : "application/octet-stream");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type");
+        // Let the browser cache uploaded media, since each file gets its own
+        // unique, never-reused UUID-based name (safe to cache "forever")
+        exchange.getResponseHeaders().set("Cache-Control", "public, max-age=31536000, immutable");
+        exchange.sendResponseHeaders(200, fileBytes.length);
+        OutputStream os = exchange.getResponseBody();
+        os.write(fileBytes);
+        os.close();
+    }
+
     //Handling CORS
 
     public static void handleCors(HttpExchange exchange) throws IOException {

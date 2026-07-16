@@ -7,7 +7,12 @@ const currentUsername = localStorage.getItem("username");
 const currentUserId = localStorage.getItem("userId");
 
 if (!currentUsername || !currentUserId) {
-    window.location.href = "../pages/login.html";
+    window.location.href = "login.html";
+}
+
+// ── Apply saved theme ──
+if (localStorage.getItem("theme") === "dark") {
+    document.body.classList.add("dark");
 }
 
 // ── Read chatId from URL ──
@@ -15,7 +20,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const chatId = urlParams.get("chatId");
 
 if (!chatId) {
-    window.location.href = "../pages/home.html";
+    window.location.href = "home.html";
 }
 
 // ── DOM References ──
@@ -44,8 +49,6 @@ let otherUsername = null;
 const seenMessageIds = new Set();
 
 // ── Load chat info ──
-// FIX: now passes ?username= so the server only returns chats this user is
-// actually part of (see ChatController), instead of the entire chat database.
 async function loadChatInfo() {
     try {
         const response = await fetch(`${API_BASE}/chat/list?username=${encodeURIComponent(currentUsername)}`);
@@ -144,6 +147,16 @@ function renderMessages(messages) {
     });
 }
 
+
+function isImagePath(path) {
+    return /\.(png|jpe?g|gif|webp)$/i.test(path || "");
+}
+
+
+function mediaUrl(content) {
+    return `${API_BASE}/media/${content}`;
+}
+
 // ── Create a single message bubble ──
 function createMessageBubble(msg) {
     const isMine = msg.senderUsername === currentUsername;
@@ -159,7 +172,11 @@ function createMessageBubble(msg) {
     if (isDeleted) {
         contentHtml = "🚫 This message was deleted";
     } else if (msg.type === "MEDIA") {
-        contentHtml = "📎 Media file";
+
+        const url = mediaUrl(msg.content);
+        contentHtml = isImagePath(msg.content)
+            ? `<img src="${url}" alt="shared image" class="message-image" style="max-width:220px;border-radius:12px;display:block;" />`
+            : `<a href="${url}" target="_blank" rel="noopener" class="message-file-link">📎 Download file</a>`;
     } else {
         contentHtml = escapeHtml(msg.content || "");
     }
@@ -168,7 +185,8 @@ function createMessageBubble(msg) {
         ? `<span class="edited-tag">edited</span>`
         : "";
 
-  
+    // Action buttons only carry the message id (a safe UUID) instead of
+    // embedding raw message content inside an inline onclick string.
     let actionsHtml = "";
     if (isMine && !isDeleted) {
         actionsHtml = `
@@ -198,7 +216,7 @@ function createMessageBubble(msg) {
     return bubble;
 }
 
-// ── Send a message ──
+// ── Send a text message ──
 async function sendMessage() {
     const content = messageInput.value.trim();
     if (!content) return;
@@ -213,21 +231,20 @@ async function sendMessage() {
             body: JSON.stringify({
                 chatId: chatId,
                 sender: currentUsername,
-                content: content
+                content: content,
+                type: "TEXT"
             })
         });
 
-        
         if (!response.ok) {
             const errData = await response.json().catch(() => ({}));
             alert(errData.error || "Failed to send message.");
-            messageInput.value = content; // give the text back so it isn't lost
+            messageInput.value = content;
             return;
         }
 
         const data = await response.json();
         if (data.messageId) {
-            // Add locally and mark as seen so poll doesn't add it again
             const newMessage = {
                 id: data.messageId,
                 senderUsername: currentUsername,
@@ -249,11 +266,93 @@ async function sendMessage() {
     }
 }
 
-// ── Edit message dialog ──
 
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result); // "data:<type>;base64,...."
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+
+fileInput.addEventListener("change", async () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    try {
+        const base64Data = await fileToBase64(file);
+
+        const uploadResponse = await fetch(`${API_BASE}/media/upload`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                fileName: file.name,
+                fileData: base64Data
+            })
+        });
+
+        if (!uploadResponse.ok) {
+            const errData = await uploadResponse.json().catch(() => ({}));
+            alert(errData.error || "Failed to upload file.");
+            return;
+        }
+
+        const uploadData = await uploadResponse.json();
+        const filePath = uploadData.path;
+
+        const sendResponse = await fetch(`${API_BASE}/chat/send`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                chatId: chatId,
+                sender: currentUsername,
+                content: filePath,
+                type: "MEDIA"
+            })
+        });
+
+        if (!sendResponse.ok) {
+            const errData = await sendResponse.json().catch(() => ({}));
+            alert(errData.error || "Failed to send file.");
+            return;
+        }
+
+        const sendData = await sendResponse.json();
+        if (sendData.messageId) {
+            const newMessage = {
+                id: sendData.messageId,
+                senderUsername: currentUsername,
+                content: filePath,
+                type: "MEDIA",
+                timestamp: localDateTimeArray(),
+                edited: false,
+                deleted: false
+            };
+            seenMessageIds.add(sendData.messageId);
+            allMessages.push(newMessage);
+            renderMessages(allMessages);
+            scrollToBottom();
+        }
+    } catch (err) {
+        console.error("File upload failed:", err);
+        alert("Failed to upload file. Is the server running?");
+    } finally {
+        fileInput.value = "";
+    }
+});
+
+// ── Edit message dialog ──
+// Content is looked up from allMessages by id instead of being passed through
+// an inline onclick string (safer, avoids breaking on special characters).
 function openEditDialog(messageId) {
     const msg = allMessages.find(m => m.id === messageId);
     if (!msg) return;
+    if (msg.type === "MEDIA") {
+        alert("Media messages can't be edited. You can delete and resend instead.");
+        return;
+    }
     editingMessageId = messageId;
     document.getElementById("editInput").value = msg.content || "";
     document.getElementById("editDialog").style.display = "flex";
@@ -381,7 +480,7 @@ messageSearchInput.addEventListener("input", () => {
     filtered.forEach(msg => {
         const bubble = createMessageBubble(msg);
         const contentEl = bubble.querySelector(".bubble-content");
-        if (contentEl && msg.content) {
+        if (contentEl && msg.type !== "MEDIA" && msg.content) {
             const regex = new RegExp(`(${escapeRegex(query)})`, "gi");
             contentEl.innerHTML = escapeHtml(msg.content).replace(
                 regex, `<span class="highlight">$1</span>`
@@ -401,14 +500,6 @@ messageInput.addEventListener("keydown", (e) => {
 
 // ── Send button ──
 sendBtn.addEventListener("click", sendMessage);
-
-// ── File attach placeholder (upload endpoint not implemented yet) ──
-fileInput.addEventListener("change", () => {
-    if (fileInput.files.length > 0) {
-        alert(`File "${fileInput.files[0].name}" selected. File upload is not implemented yet.`);
-        fileInput.value = "";
-    }
-});
 
 // ── Close dialogs when clicking outside ──
 document.getElementById("editDialog").addEventListener("click", (e) => {
