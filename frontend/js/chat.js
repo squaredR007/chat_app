@@ -168,10 +168,7 @@ function createMessageBubble(msg) {
         ? `<span class="edited-tag">edited</span>`
         : "";
 
-    // FIX: action buttons now only carry the message id (a safe UUID) instead of
-    // embedding the raw message content inside an inline onclick string. Before,
-    // a message containing a backtick or ${...} could break the page's JS or be
-    // used to inject unexpected onclick behaviour.
+  
     let actionsHtml = "";
     if (isMine && !isDeleted) {
         actionsHtml = `
@@ -220,8 +217,7 @@ async function sendMessage() {
             })
         });
 
-        // FIX: previously any non-2xx response was still parsed as if it succeeded;
-        // the server's actual error message (e.g. "Too many messages") never reached the user.
+        
         if (!response.ok) {
             const errData = await response.json().catch(() => ({}));
             alert(errData.error || "Failed to send message.");
@@ -254,8 +250,7 @@ async function sendMessage() {
 }
 
 // ── Edit message dialog ──
-// FIX: content is now looked up from allMessages by id instead of being passed
-// through the inline onclick string (see createMessageBubble above).
+
 function openEditDialog(messageId) {
     const msg = allMessages.find(m => m.id === messageId);
     if (!msg) return;
