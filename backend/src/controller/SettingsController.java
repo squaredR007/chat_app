@@ -34,6 +34,9 @@ public class SettingsController implements HttpHandler {
             } else if (path.equals("/api/settings/changeUsername") && method.equals("POST")) {
                 handleChangeUsername(exchange);
 
+            } else if (path.equals("/api/settings/changePassword") && method.equals("POST")) {
+                handleChangePassword(exchange);
+
             } else if (path.equals("/api/settings/changeBackground") && method.equals("POST")) {
                 handleChangeBackground(exchange);
 

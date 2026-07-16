@@ -7,12 +7,7 @@ const currentUsername = localStorage.getItem("username");
 const currentUserId = localStorage.getItem("userId");
 
 if (!currentUsername || !currentUserId) {
-    window.location.href = "login.html";
-}
-
-// ── Apply saved theme ──
-if (localStorage.getItem("theme") === "dark") {
-    document.body.classList.add("dark");
+    window.location.href = "../pages/login.html";
 }
 
 // ── Read chatId from URL ──
@@ -20,7 +15,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const chatId = urlParams.get("chatId");
 
 if (!chatId) {
-    window.location.href = "home.html";
+    window.location.href = "../pages/home.html";
 }
 
 // ── DOM References ──

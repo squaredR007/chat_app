@@ -1,10 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
 
-    // Apply saved theme
-    if (localStorage.getItem("theme") === "dark") {
-        document.body.classList.add("dark");
-    }
-
     const username = localStorage.getItem("username");
     const userId = localStorage.getItem("userId");
 

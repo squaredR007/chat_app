@@ -13,6 +13,7 @@ if (!currentUsername || !currentUserId) {
 // Apply saved theme
 if (localStorage.getItem("theme") === "dark") {
     document.body.classList.add("dark");
+    window.location.href = "../pages/login.html";
 }
 
 // Read chatId from URL
@@ -20,7 +21,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const chatId = urlParams.get("chatId");
 
 if (!chatId) {
-    window.location.href = "home.html";
+    window.location.href = "../pages/home.html";
 }
 
 // DOM References
@@ -363,7 +364,7 @@ document.getElementById("leaveConfirmBtn").addEventListener("click", async () =>
             alert(errData.error || "Failed to leave the group.");
             return;
         }
-        window.location.href = "home.html";
+        window.location.href = "../pages/home.html";
     } catch (err) {
         console.error("Failed to leave group:", err);
         alert("Could not connect to server.");
