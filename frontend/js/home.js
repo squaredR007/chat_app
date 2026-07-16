@@ -191,7 +191,7 @@ function createChatItem(chat) {
     return item;
 }
 
-// Get last message preview text
+// ── Get last message preview text ──
 function getLastMessagePreview(chat) {
     const messages = chat.messages;
     if (!messages || messages.length === 0) return "No messages yet";

@@ -4,6 +4,7 @@ package service;
 import model.User;
 import repository.UserRepository;
 import java.util.regex.Pattern;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class AuthService {
     private static final int maxFailedAttempts = 5;//locked after 5 unsuccessful attempts
@@ -30,8 +31,11 @@ public class AuthService {
         if (userRepository.existsByNumber(number))
             return false;
 
+        //change password to hash password
+        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+
         //create user and saved message
-        User user=new User.Builder().username(username).password(password).number(number).failedLoginAttempts(0).lockUntil(0).build();
+        User user=new User.Builder().username(username).password(hashedPassword).number(number).failedLoginAttempts(0).lockUntil(0).build();
         boolean saved = userRepository.addUser(user) ;
 
         if (saved) {
@@ -62,7 +66,7 @@ public class AuthService {
         }
 
         //if the wrong password is entered
-        if (!user.getPassword().equals(password)) {
+        if (!BCrypt.checkpw(password, user.getPassword())) {
             user.incrementFailedLoginAttempts();
             if (user.getFailedLoginAttempts() >= maxFailedAttempts) {
                 user.setLockUntil(now + lockDuration);
