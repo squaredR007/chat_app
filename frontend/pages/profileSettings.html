@@ -7,11 +7,13 @@
 <body>
 
 <div class="settings-container">
+    <!-- back to settings -->
     <a href="../pages/settings.html" class="back-btn"><span class="back-icon">←</span></a>
 
     <div class="profile-detail-container">
         <div class="info-card">
 
+            <!-- profile image -->
             <div class="info-row">
                 <span class="label">profile image</span>
                 <img id="preview-profile-image" class="avatar-preview" src="" alt="">
@@ -19,12 +21,14 @@
                 <input type="file" id="input-profile-image" class="value-input" accept="image/*">
             </div>
 
+            <!-- display name -->
             <div class="info-row">
                 <span class="label">display name</span>
                 <span id="text-displayname" class="value-text"></span>
                 <input type="text" id="input-displayname" class="value-input" value="display name">
             </div>
 
+            <!-- biography -->
             <div class="info-row">
                 <span class="label">biography</span>
                 <span id="text-biography" class="value-text"></span>
@@ -32,11 +36,13 @@
             </div>
 
         </div>
-
+        <!-- edit button -->
         <button id="main-btn" class="edit-btn" onclick="toggleEdit()">edit</button>
     </div>
 </div>
+<!-- style -->
 <link rel="stylesheet" href="../css/profileSettings.css">
+<!-- script -->
 <script src="../js/theme.js"></script>
 <script src="../js/profileSettings.js"></script>
 </body>
