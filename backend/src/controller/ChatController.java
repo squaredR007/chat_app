@@ -59,17 +59,37 @@ public class ChatController implements HttpHandler{
                 HttpUtils.sendError(exchange, 404, "Endpoint not found");
             }
         } catch (RuntimeException e) {
-            HttpUtils.sendError(exchange, 400, e.getMessage());
+            HttpUtils.sendError(exchange, 400, e.getMessage() != null ? e.getMessage() : "Bad Request");
         }
+    }
+
+    //Checking whether a required JSON field is empty or null
+
+    private String requireString(JsonObject body , String field) {
+        if (!body.has(field) || body.get(field).isJsonNull()) {
+            throw new RuntimeException("Missing required field: " + field) ;
+        }
+        String value = body.get(field).getAsString() ;
+        if (value == null || value.trim().isEmpty()) {
+            throw new RuntimeException("Field cannot be empty: " + field) ;
+        }
+        return value ;
+    }
+
+    private String requireQueryParam (JsonObject params , String field) {
+        if (!params.has(field) || params.get(field).getAsString().isEmpty()) {
+            throw new RuntimeException("Missing required query parameter: " + field) ;
+        }
+        return params.get(field).getAsString() ;
     }
 
     //Creating a private chat
 
     private void handleCreatePrivateChat(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
-        String chatId = body.get("chatId").getAsString();
-        String user1 = body.get("user1").getAsString();
-        String user2 = body.get("user2").getAsString();
+        String chatId = requireString(body , "chatId");
+        String user1 = requireString(body, "user1");
+        String user2 = requireString(body , "user2");
 
         chatService.creatPrivateChat(chatId, user1, user2);
 
@@ -79,13 +99,20 @@ public class ChatController implements HttpHandler{
     }
 
     //Returning all of the chats as a list
-
+    //New feature : in phase 1 we used to send all of the chats to all of the users which had a privacy leak , but now it is fixed
     private void handleGetAllChats(HttpExchange exchange) throws IOException {
+        String query = exchange.getRequestURI().getQuery() ;
+        JsonObject queryParams = HttpUtils.parseQueryString(query) ;
+        String filterUsername = (queryParams.has("username") && !queryParams.get("username").getAsString().isEmpty()) ? queryParams.get("username").getAsString() : null ;
+
         List<Chat> chats = chatService.getAllChats();
 
         com.google.gson.JsonArray result = new com.google.gson.JsonArray();
 
         for (Chat chat : chats) {
+            if (filterUsername != null && !chatBelongsToUser(chat , filterUsername)) {
+                continue;
+            }
             JsonObject chatJson = new JsonObject();
             chatJson.addProperty("chatId", chat.getChatId());
             chatJson.addProperty("pinned", chat.isPinned());
@@ -102,7 +129,7 @@ public class ChatController implements HttpHandler{
                     msgJson.addProperty("type", msg.getType().toString());
                     msgJson.addProperty("deleted", msg.isDeleted());
                     msgJson.addProperty("edited", msg.isEdited());
-                    chatJson.add("messages", messagesArray);
+                    messagesArray.add(msgJson);
                 }
             }
             chatJson.add("messages", messagesArray);
@@ -141,12 +168,28 @@ public class ChatController implements HttpHandler{
         HttpUtils.sendResponse(exchange, 200, result);
     }
 
+    //Used to see if the chat should be show to the user or not
+    private boolean chatBelongsToUser(Chat chat , String username) {
+        if (chat.getChatId() != null && chat.getChatId().equals("saved_" + username)) {
+            return true;
+        }
+        if (chat instanceof model.PrivateChat) {
+            model.PrivateChat pc = (model.PrivateChat) chat ;
+            return username.equals(pc.getUser1Username()) || username.equals(pc.getUser2Username());
+        }
+        if (chat instanceof model.GroupChat) {
+            model.GroupChat gc = (model.GroupChat) chat ;
+            return gc.getGroup() != null && gc.getGroup().getMembersUsernames() != null && gc.getGroup().getMembersUsernames().contains(username) ;
+        }
+        return false ;
+    }
+
     //Returning all of the messages as a list
 
     private void handleGetMessages(HttpExchange exchange) throws IOException {
         String query = exchange.getRequestURI().getQuery();
         JsonObject queryParams = HttpUtils.parseQueryString(query);
-        String chatId = queryParams.get("chatId").getAsString();
+        String chatId = requireQueryParam(queryParams , "chatId");
 
         List<Message> messages = messageService.getMessages(chatId);
         HttpUtils.sendResponse(exchange, 200, messages);
@@ -156,9 +199,9 @@ public class ChatController implements HttpHandler{
 
     private void handleSendMessage(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
-        String chatId = body.get("chatId").getAsString();
-        String sender = body.get("sender").getAsString();
-        String content = body.get("content").getAsString();
+        String chatId = requireString(body , "chatId");
+        String sender = requireString(body , "sender");
+        String content = requireString(body , "content");
 
         Message message = messageService.sendMessage(chatId, sender, content, Message.MessageType.TEXT);
 
@@ -171,7 +214,7 @@ public class ChatController implements HttpHandler{
 
     private void handleArchiveChat(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
-        String chatId = body.get("chatId").getAsString();
+        String chatId = requireString(body ,"chatId");
 
         chatService.archiveChat(chatId);
 
@@ -184,7 +227,7 @@ public class ChatController implements HttpHandler{
 
     private void handlePinChat(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
-        String chatId = body.get("chatId").getAsString();
+        String chatId = requireString(body , "chatId");
 
         chatService.pinChat(chatId);
 
@@ -197,8 +240,8 @@ public class ChatController implements HttpHandler{
 
     private void handleReportMessage(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
-        String chatId = body.get("chatId").getAsString();
-        String messageId = body.get("messageId").getAsString();
+        String chatId = requireString(body ,"chatId");
+        String messageId = requireString(body ,"messageId");
 
         messageService.reportMessage(chatId, messageId);
 
@@ -212,8 +255,15 @@ public class ChatController implements HttpHandler{
     private void handlePollMessages(HttpExchange exchange) throws IOException {
         String query = exchange.getRequestURI().getQuery();
         JsonObject queryParams = HttpUtils.parseQueryString(query);
-        String chatId = queryParams.get("chatId").getAsString();
-        long since = Long.parseLong(queryParams.get("since").getAsString());
+        String chatId = requireQueryParam(queryParams ,"chatId");
+        String sinceStr = requireQueryParam(queryParams , "since") ;
+        long since ;
+
+        try {
+            since = Long.parseLong(sinceStr) ;
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("Invalid 'since' timestamp");
+        }
 
         List<Message> newMessages = messageService.getMessagesSince(chatId, since);
         HttpUtils.sendResponse(exchange, 200, newMessages);
@@ -222,9 +272,9 @@ public class ChatController implements HttpHandler{
     // Editing a message which saves previous content for history
     private void handleEditMessage(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
-        String chatId = body.get("chatId").getAsString();
-        String messageId = body.get("messageId").getAsString();
-        String newContent = body.get("newContent").getAsString();
+        String chatId = requireString(body , "chatId");
+        String messageId = requireString(body , "messageId");
+        String newContent = requireString(body , "newContent");
 
         messageService.editMessage(chatId, messageId, newContent);
 
@@ -236,9 +286,9 @@ public class ChatController implements HttpHandler{
     // Deleting a message which keeps it visible in history
     private void handleDeleteMessage(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
-        String chatId = body.get("chatId").getAsString();
-        String messageId = body.get("messageId").getAsString();
-        String requestingUsername = body.get("requestingUsername").getAsString();
+        String chatId = requireString(body , "chatId");
+        String messageId = requireString(body , "messageId");
+        String requestingUsername = requireString(body , "requestingUsername");
 
         messageService.deleteMessage(chatId, messageId, requestingUsername);
 
@@ -250,7 +300,7 @@ public class ChatController implements HttpHandler{
     // Unpinning a chat
     private void handleUnpinChat(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
-        String chatId = body.get("chatId").getAsString();
+        String chatId = requireString(body , "chatId");
 
         chatService.unpinChat(chatId);
 
@@ -262,7 +312,7 @@ public class ChatController implements HttpHandler{
     // Unarchiving a chat
     private void handleUnarchiveChat(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
-        String chatId = body.get("chatId").getAsString();
+        String chatId = requireString(body , "chatId");
 
         chatService.unarchiveChat(chatId);
 

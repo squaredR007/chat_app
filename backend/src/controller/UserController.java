@@ -44,11 +44,23 @@ public class UserController implements HttpHandler {
         }
     }
 
+    //Checking whether a required JSON field is empty or null
+    private String requireString(JsonObject body , String field) {
+        if (!body.has(field) || body.get(field).isJsonNull()) {
+            throw new RuntimeException("Missing required field: " + field) ;
+        }
+        String value = body.get(field).getAsString() ;
+        if (value == null || value.trim().isEmpty()) {
+            throw new RuntimeException("Field cannot be empty: " + field) ;
+        }
+        return value ;
+    }
+
     // blocks a user
     private void handleBlockUser(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
-        String userId = body.get("userId").getAsString();
-        String targetUserId = body.get("targetUserId").getAsString();
+        String userId = requireString(body , "userId");
+        String targetUserId = requireString(body ,"targetUserId");
 
         User user = userRepository.getByUserId(userId);
         if (user == null) throw new RuntimeException("User not found");
@@ -62,8 +74,8 @@ public class UserController implements HttpHandler {
     // unblocks a user
     private void handleUnblockUser(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
-        String userId = body.get("userId").getAsString();
-        String targetUserId = body.get("targetUserId").getAsString();
+        String userId = requireString(body , "userId");
+        String targetUserId = requireString(body , "targetUserId");
 
         User user = userRepository.getByUserId(userId);
         if (user == null) throw new RuntimeException("User not found");
@@ -77,8 +89,8 @@ public class UserController implements HttpHandler {
     // adds a contact
     private void handleAddContact(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
-        String userId = body.get("userId").getAsString();
-        String contactUserId = body.get("contactUserId").getAsString();
+        String userId = requireString(body , "userId");
+        String contactUserId = requireString(body , "contactUserId");
 
         User user = userRepository.getByUserId(userId);
         if (user == null) throw new RuntimeException("User not found");
@@ -93,6 +105,10 @@ public class UserController implements HttpHandler {
     private void handleGetUserInfo(HttpExchange exchange) throws IOException {
         String query = exchange.getRequestURI().getQuery();
         JsonObject params = HttpUtils.parseQueryString(query);
+        if (!params.has("userId") || params.get("userId").getAsString().isEmpty()) {
+            HttpUtils.sendError(exchange , 400 , "Missing required query parameter: userId");
+            return;
+        }
         String userId = params.get("userId").getAsString();
 
         User user = userRepository.getByUserId(userId);
