@@ -1,7 +1,7 @@
-//  Config 
-const API_BASE = "http://localhost:7600/api";
+// Config
+const API_BASE = "http://localhost:8080/api";
 
-//Read logged-in user from localStorage 
+// Read logged-in user from localStorage
 const currentUsername = localStorage.getItem("username");
 const currentUserId = localStorage.getItem("userId");
 
@@ -9,12 +9,12 @@ if (!currentUsername || !currentUserId) {
     window.location.href = "login.html";
 }
 
-//  Apply saved theme
+// Apply saved theme
 if (localStorage.getItem("theme") === "dark") {
     document.body.classList.add("dark");
 }
 
-//  DOM References 
+// DOM References
 const contactList = document.getElementById("contactList");
 const contactSearchInput = document.getElementById("contactSearchInput");
 const privateFeedback = document.getElementById("privateFeedback");
@@ -22,11 +22,11 @@ const groupFeedback = document.getElementById("groupFeedback");
 const memberChips = document.getElementById("memberChips");
 const groupMemberInput = document.getElementById("groupMemberInput");
 
-// State 
+// State
 let groupMembers = [currentUsername]; // admin is always a member
 let allContacts = [];
 
-// Tab switching 
+// Tab switching
 function switchTab(tab) {
     // Hide all content
     document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
@@ -44,7 +44,8 @@ function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-//private chat
+// ── Private chat ──
+
 document.getElementById("startPrivateChatBtn").addEventListener("click", async () => {
     const targetUsername = document.getElementById("privateChatUsername").value.trim();
 
@@ -75,25 +76,22 @@ document.getElementById("startPrivateChatBtn").addEventListener("click", async (
 
         const data = await response.json();
 
-        if (data.status === "chat created" || data.error === undefined) {
-            showFeedback(privateFeedback, "Chat created! Redirecting... 💬", "success");
+        if (response.ok) {
+            showFeedback(privateFeedback, "Chat ready! Redirecting... 💬", "success");
             setTimeout(() => {
-                window.location.href = `chat.html?chatId=${chatId}`;
+                window.location.href = `chat.html?chatId=${encodeURIComponent(chatId)}`;
             }, 800);
         } else {
-            showFeedback(privateFeedback, data.error || "Something went wrong.", "error");
+            showFeedback(privateFeedback, data.error || "Could not start the chat. Check the username and try again.", "error");
         }
     } catch (err) {
-        // If chat already exists, just navigate to it
-        showFeedback(privateFeedback, "Opening chat... 💬", "success");
-        setTimeout(() => {
-            window.location.href = `chat.html?chatId=${chatId}`;
-        }, 800);
+       
+        showFeedback(privateFeedback, "Could not connect to server.", "error");
         console.error("Chat create error:", err);
     }
 });
 
-// creating group 
+// ── creating group ──
 
 // Add member to the pending group member list
 document.getElementById("addMemberToListBtn").addEventListener("click", () => {
@@ -126,10 +124,14 @@ function renderMemberChips() {
         chip.className = "chip";
         chip.innerHTML = `
             <div class="chip-avatar">${username.charAt(0).toUpperCase()}</div>
-            <span>${username}${isAdmin ? " 👑" : ""}</span>
-            ${!isAdmin ? `<button class="chip-remove" onclick="removeMember('${username}')">✕</button>` : ""}
+            <span>${escapeHtml(username)}${isAdmin ? " 👑" : ""}</span>
+            ${!isAdmin ? `<button class="chip-remove" data-username="${escapeHtml(username)}">✕</button>` : ""}
         `;
         memberChips.appendChild(chip);
+    });
+
+    memberChips.querySelectorAll(".chip-remove").forEach(btn => {
+        btn.addEventListener("click", () => removeMember(btn.dataset.username));
     });
 }
 
@@ -139,6 +141,7 @@ function removeMember(username) {
 }
 
 // Create the group
+
 document.getElementById("createGroupBtn").addEventListener("click", async () => {
     const groupName = document.getElementById("groupName").value.trim();
 
@@ -171,15 +174,17 @@ document.getElementById("createGroupBtn").addEventListener("click", async () => 
 
         const groupData = await groupResponse.json();
 
-        if (groupData.status !== "group created") {
+        if (!groupResponse.ok || groupData.status !== "group created") {
             showFeedback(groupFeedback, groupData.error || "Failed to create group.", "error");
             return;
         }
 
         // Step 2: Add each member (skip admin, already added by GroupService)
         const membersToAdd = groupMembers.filter(m => m !== currentUsername);
+        let allMembersAdded = true;
+
         for (const member of membersToAdd) {
-            await fetch(`${API_BASE}/group/addMember`, {
+            const addResponse = await fetch(`${API_BASE}/group/addMember`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -187,11 +192,20 @@ document.getElementById("createGroupBtn").addEventListener("click", async () => 
                     username: member
                 })
             });
+            if (!addResponse.ok) {
+                allMembersAdded = false;
+            }
         }
 
-        showFeedback(groupFeedback, `Group "${groupName}" created! Redirecting... 🎀`, "success");
+        showFeedback(
+            groupFeedback,
+            allMembersAdded
+                ? `Group "${groupName}" created! Redirecting... 🎀`
+                : `Group created, but some members could not be added.`,
+            allMembersAdded ? "success" : "error"
+        );
         setTimeout(() => {
-            window.location.href = `group-chat.html?chatId=${chatId}`;
+            window.location.href = `group-chat.html?chatId=${encodeURIComponent(chatId)}`;
         }, 900);
 
     } catch (err) {
@@ -200,14 +214,15 @@ document.getElementById("createGroupBtn").addEventListener("click", async () => 
     }
 });
 
-// contacts tab
+// ── contacts tab ──
+
 async function loadContacts() {
     contactList.innerHTML = `<div class="empty-state">Loading...</div>`;
 
     try {
-        // Fetch all chats to find existing private chats
+        // Fetch this user's chats to find existing private chats
         // (contacts = users we already have private chats with)
-        const response = await fetch(`${API_BASE}/chat/list`);
+        const response = await fetch(`${API_BASE}/chat/list?username=${encodeURIComponent(currentUsername)}`);
         const chats = await response.json();
 
         // Filter private chats involving current user
@@ -239,13 +254,13 @@ function renderContacts(contacts) {
     contactList.innerHTML = "";
     contacts.forEach(contact => {
         const item = document.createElement("a");
-        item.href = `chat.html?chatId=${contact.chatId}`;
+        item.href = `chat.html?chatId=${encodeURIComponent(contact.chatId)}`;
         item.className = "contact-item";
         item.innerHTML = `
             <div class="contact-avatar">${contact.username.charAt(0).toUpperCase()}</div>
             <div>
-                <div class="contact-name">${contact.username}</div>
-                <div class="contact-username">@${contact.username}</div>
+                <div class="contact-name">${escapeHtml(contact.username)}</div>
+                <div class="contact-username">@${escapeHtml(contact.username)}</div>
             </div>
         `;
         contactList.appendChild(item);
@@ -263,7 +278,7 @@ contactSearchInput.addEventListener("input", () => {
     renderContacts(filtered);
 });
 
-// Feedback helper 
+// Feedback helper
 function showFeedback(el, message, type) {
     el.textContent = message;
     el.className = `feedback ${type}`;
@@ -274,6 +289,16 @@ function showFeedback(el, message, type) {
             el.className = "feedback";
         }
     }, 4000);
+}
+
+// innerHTML unescaped.
+function escapeHtml(text) {
+    if (!text) return "";
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
 }
 
 // Init: render current user chip
