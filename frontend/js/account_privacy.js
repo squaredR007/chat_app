@@ -14,18 +14,22 @@ document.addEventListener("DOMContentLoaded", () => {
 let editing = false;
 
 async function toggleEdit() {
-
+    const button = document.getElementById("main-btn");
     editing = !editing;
 
-    document.querySelectorAll(".value-input").forEach(input => {
-        input.disabled = !editing;
-    });
+    document.querySelectorAll(".value-input").forEach(input => {input.disabled = !editing;});
 
-    if (!editing) {
+    if (editing) {
+        button.textContent = "Save";
+        document.getElementById("input-password").focus();
+        return;
+    }
+
+    button.textContent = "edit";
         await changeUsername();
         await changeNumber();
         await changePassword();
-    }
+        document.getElementById("input-password").value = "";
 }
 
 async function changeUsername() {
@@ -160,6 +164,8 @@ async function loadUserInfo() {
 
         document.getElementById("text-username").innerText = data.username;
         document.getElementById("text-number").innerText = data.number;
+        document.getElementById("text-password").innerText = "••••••••";
+        document.getElementById("input-password").placeholder = "Enter new password";
 
     } catch (err) {
 

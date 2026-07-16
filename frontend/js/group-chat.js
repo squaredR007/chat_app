@@ -10,11 +10,6 @@ if (!currentUsername || !currentUserId) {
     window.location.href = "../pages/login.html";
 }
 
-//Apply saved theme
-if (localStorage.getItem("theme") === "dark") {
-    document.body.classList.add("dark");
-}
-
 // Read chatId from URL
 const urlParams = new URLSearchParams(window.location.search);
 const chatId = urlParams.get("chatId");
@@ -521,29 +516,7 @@ function escapeRegex(text) {
     return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-async function loadUserBackground(){
-    try {
-        const response = await fetch(`${API_BASE}/user/info?userId=${currentUserId}`);
-        const user = await response.json();
-
-        // Load profile background
-            if (user.background) {
-            const background = document.querySelector(".top-background");
-
-                if (background) {
-                    background.style.backgroundImage = `url(${user.background})`;
-                    background.style.backgroundSize = "cover";
-                    background.style.backgroundPosition = "center";
-                }
-            }
-
-    } catch(err){
-        console.error("Background loading error:", err);
-    }
-}
-
 //  Init
-loadUserBackground();
 loadGroupInfo();
 loadMessages();
 setInterval(pollNewMessages, POLL_INTERVAL);

@@ -14,8 +14,9 @@
 
             <div class="info-row">
                 <span class="label">profile image</span>
+                <img id="preview-profile-image" class="avatar-preview" src="" alt="">
                 <span id="text-profile-image" class="value-text"></span>
-                <input type="file" id="input-profile-image" class="value-input">
+                <input type="file" id="input-profile-image" class="value-input" accept="image/*">
             </div>
 
             <div class="info-row">
@@ -30,18 +31,13 @@
                 <input type="text" id="input-biography" class="value-input" value="biography">
             </div>
 
-            <div class="info-row">
-                <span class="label">background</span>
-                <span id="text-background" class="value-text"></span>
-                <input type="file" id="input-background" class="value-input">
-            </div>
-
         </div>
 
         <button id="main-btn" class="edit-btn" onclick="toggleEdit()">edit</button>
     </div>
 </div>
 <link rel="stylesheet" href="../css/profileSettings.css">
+<script src="../js/theme.js"></script>
 <script src="../js/profileSettings.js"></script>
 </body>
 </html>

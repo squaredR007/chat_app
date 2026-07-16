@@ -37,6 +37,10 @@ themeToggle.addEventListener("click", () => {
     themeToggle.textContent = isDark ? "☀️" : "🌙";
     localStorage.setItem("theme", isDark ? "dark" : "light");
 
+    if (window.applyGlobalBackground) {
+        window.applyGlobalBackground();
+    }
+
     if (currentUserId) {
         fetch(`${API_BASE}/settings/changeDarkMode`, {
             method: "POST",

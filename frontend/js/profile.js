@@ -1,10 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
 
-    // Apply saved theme
-    if (localStorage.getItem("theme") === "dark") {
-        document.body.classList.add("dark");
-    }
-
     const username = localStorage.getItem("username");
     const userId = localStorage.getItem("userId");
 
@@ -20,17 +15,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         try {
             const response = await fetch(`http://localhost:8080/api/user/info?userId=${userId}`);
             const user = await response.json();
-
-            // Load profile background
-            if (user.background) {
-                const background = document.querySelector(".top-background");
-
-                if (background) {
-                    background.style.backgroundImage = `url(${user.background})`;
-                    background.style.backgroundSize = "cover";
-                    background.style.backgroundPosition = "center";
-                }
-            }
 
             // Fill in bio
             const bioEl = document.querySelector(".info-item:nth-child(1) .info-text");
