@@ -3,6 +3,8 @@ body{
     background:#fff0f5;
     color:#4a2035;
     padding:40px;
+    background-size:cover;
+    background-position:center;
 }
 
 .profile-detail-container{
@@ -30,7 +32,33 @@ body{
     height:20px;
     accent-color:#ff85a1;
 }
+.background-title{
+    margin-top:25px;
+    margin-bottom:15px;
+    color:#ff85a1;
+    font-weight:600;
+}
 
+.background-options{
+    display:flex;
+    gap:15px;
+}
+
+.background-option{
+    width:90px;
+    height:90px;
+    border-radius:15px;
+    background-size:cover;
+    background-position:center;
+    cursor:pointer;
+    border:3px solid transparent;
+    transition:.2s;
+}
+
+.background-option:hover{
+    transform:scale(1.05);
+    border-color:#ff85a1;
+}
 
 .back-btn{
     display:inline-flex;
@@ -43,13 +71,6 @@ body{
     background:#ff85a1;
     color:white;
     font-size:18px;
-    transition:.2s;
-    box-shadow:0 2px 8px rgba(255,133,161,.35);
-}
-
-.back-btn:hover{
-    transform:scale(1.08);
-    background:#ff4d79;
 }
 
 body.dark{
@@ -61,15 +82,13 @@ body.dark .profile-detail-container{
     background:#3d1a2e;
 }
 
-body.dark .label{
+body.dark .label,
+body.dark .background-title{
     color:#ffb3c6;
+
 }
 
-body.dark .back-btn,
-body.dark .edit-btn{
+body.dark .back-btn{
     background:#b33d60;
-}
 
-body.dark .back-btn:hover{
-    background:#ff85a1;
 }

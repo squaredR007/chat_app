@@ -4,7 +4,7 @@
     const username = localStorage.getItem("username");
     const userId = localStorage.getItem("userId");
     if (!username || !userId) {
-        window.location.href = "login.html";
+        window.location.href = "../pages/login.html";
     }
 })();
 
@@ -36,6 +36,10 @@ themeToggle.addEventListener("click", () => {
     const isDark = document.body.classList.toggle("dark");
     themeToggle.textContent = isDark ? "☀️" : "🌙";
     localStorage.setItem("theme", isDark ? "dark" : "light");
+
+    if (window.applyGlobalBackground) {
+        window.applyGlobalBackground();
+    }
 
     if (currentUserId) {
         fetch(`${API_BASE}/settings/changeDarkMode`, {

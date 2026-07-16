@@ -6,7 +6,7 @@ const currentUsername = localStorage.getItem("username");
 const currentUserId = localStorage.getItem("userId");
 
 if (!currentUsername || !currentUserId) {
-    window.location.href = "login.html";
+    window.location.href = "../pages/login.html";
 }
 
 //  Apply saved theme

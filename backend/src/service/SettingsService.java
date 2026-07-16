@@ -2,6 +2,8 @@ package service;
 
 import model.User;
 import repository.UserRepository;
+import org.mindrot.jbcrypt.BCrypt;
+import java.util.regex.Pattern;
 
 public class SettingsService {
 
@@ -26,9 +28,21 @@ public class SettingsService {
         User user= userRepository.getByUserId(userId);
         if (user==null || username==null)
             return false;
-        if (userRepository.existsByUsername(username))
+        if (userRepository.existsByUsername(username) && !user.getUsername().equals(username))
             return false ;
         user.setUsername(username);
+        return true;
+    }
+
+    public boolean changePassword(String userId, String password){
+        User user = userRepository.getByUserId(userId);
+        if (user == null || password == null)
+            return false;
+        if (!isValidPassword(password, user.getUsername()))
+            return false;
+
+        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+        user.setPassword(hashedPassword);
         return true;
     }
 
@@ -77,6 +91,31 @@ public class SettingsService {
         if (user==null)
             return false;
         user.setDarkMode(darkmode);
+        return true;
+    }
+
+    //check the password
+
+    private boolean patternPassword(String password){
+        String regex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[*&^%$#@!])[A-Za-z\\d*&^%$#@!]{8,}$";
+
+        if (!Pattern.matches(regex, password))
+            return false;
+        return true;
+    }
+
+    private boolean isValidPassword(String password, String username) {
+        if (password.length() < 8)
+            return false;
+
+        //check for inequality with username
+        if (password.toLowerCase().contains(username.toLowerCase()))
+            return false;
+
+        //check the password pattern
+        if (!patternPassword(password))
+            return false;
+
         return true;
     }
 

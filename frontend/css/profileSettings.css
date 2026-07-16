@@ -26,11 +26,22 @@ body{
 }
 
 .value-input{
+    display:none;
     width:100%;
     padding:12px;
     border:1px solid #ffd6e7;
     border-radius:12px;
     background:#fff8fb;
+}
+
+.avatar-preview{
+    display:block;
+    width:80px;
+    height:80px;
+    border-radius:50%;
+    object-fit:cover;
+    background:#ffd6e7;
+    margin-bottom:10px;
 }
 
 .edit-btn{

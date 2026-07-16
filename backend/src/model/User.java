@@ -22,7 +22,7 @@ public class User {
     private String displayName;
     private String profileImage;
     private String biography;
-    private String background; //profile background
+    private String background;
     private long lastSeen;
     private boolean darkMode;
 

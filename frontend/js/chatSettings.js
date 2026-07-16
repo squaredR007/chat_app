@@ -1,65 +1,67 @@
 document.addEventListener("DOMContentLoaded", () => {
 
     const checkbox = document.getElementById("checkbox-dark-mode");
-
     const savedTheme = localStorage.getItem("theme");
 
-    if (savedTheme === "dark") {
-
-        document.body.classList.add("dark");
-
-        if (checkbox) {
-            checkbox.checked = true;
-        }
-
-    }
-
     if (checkbox) {
+    checkbox.checked = savedTheme === "dark";
 
-        checkbox.addEventListener("change", function () {
+    checkbox.addEventListener("change", function () {
+    const isDark = this.checked;
 
-            const isDark = this.checked;
+    localStorage.setItem("theme", isDark ? "dark" : "light");
 
-            document.body.classList.toggle("dark", isDark);
+    window.applyGlobalTheme();
+    window.applyGlobalBackground();
+    saveTheme(isDark);
+    });
+}
 
-            localStorage.setItem(
-                "theme",
-                isDark ? "dark" : "light"
-            );
+const options = document.querySelectorAll(".background-option");
 
-            saveTheme(isDark);
+    options.forEach(option => {
+        const background = option.dataset.background;
+        const imagePath = `../image/${background}-light.png`;
+        option.style.backgroundImage = `url("${imagePath}")`;
 
+        option.addEventListener("click", () => {
+            localStorage.setItem("background", background);
+            window.applyGlobalBackground();
+            saveBackground(background);
         });
-
-    }
-
+    });
 });
 
-async function saveTheme(isDark) {
+async function saveTheme(isDark){
 
     const userId = localStorage.getItem("userId");
+    if(!userId) return;
 
+    try{
+        await fetch("http://localhost:8080/api/settings/changeDarkMode",
+            {
+                method:"POST",
+                headers:{"Content-Type":"application/json"},
+                body:JSON.stringify({userId, darkmode:isDark})
+            }
+        );
+    }
+    catch(err){
+        console.error(err);
+    }
+}
+
+async function saveBackground(background) {
+    const userId = localStorage.getItem("userId");
     if (!userId) return;
 
     try {
-
-        const response = await fetch("http://localhost:8080/api/settings/changeDarkMode", {
+        await fetch("http://localhost:8080/api/settings/changeBackground", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                userId,
-                darkmode: isDark
-            })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId, background })
         });
-
-        console.log(await response.json());
-
     } catch (err) {
-
         console.error(err);
-
     }
-
 }
