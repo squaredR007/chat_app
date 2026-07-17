@@ -59,12 +59,12 @@ public class UserController implements HttpHandler {
     // blocks a user
     private void handleBlockUser(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
-        String userId = requireString(body , "userId");
-        String targetUserId = requireString(body ,"targetUserId");
+        String username = requireString(body , "username");
+        String targetUsername = requireString(body ,"targetUsername");
 
-        User user = userRepository.getByUsername(userId);
+        User user = userRepository.getByUsername(username);
         if (user == null) throw new RuntimeException("User not found");
-        user.blockUser(targetUserId);
+        user.blockUser(targetUsername);
 
         JsonObject response = new JsonObject();
         response.addProperty("success", true);
