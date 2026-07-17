@@ -13,7 +13,6 @@ if (!currentUsername || !currentUserId) {
 // Apply saved theme
 if (localStorage.getItem("theme") === "dark") {
     document.body.classList.add("dark");
-    window.location.href = "../pages/login.html";
 }
 
 // Read chatId from URL
@@ -21,7 +20,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const chatId = urlParams.get("chatId");
 
 if (!chatId) {
-    window.location.href = "../pages/home.html";
+    window.location.href = "home.html";
 }
 
 // DOM References
@@ -52,13 +51,9 @@ let pollInterval = null;
 let editingMessageId = null;
 let deletingMessageId = null;
 let currentGroup = null; // the Group object for this chat
-// FIX: this Set didn't exist before, so the poll loop could re-add messages
-// (including ones we just sent ourselves) and show duplicates on screen.
 const seenMessageIds = new Set();
 
 // Load group info
-// FIX: now passes ?username= so the server only returns chats this user is
-// actually part of, instead of the entire chat database.
 async function loadGroupInfo() {
     try {
         const response = await fetch(`${API_BASE}/chat/list?username=${encodeURIComponent(currentUsername)}`);
@@ -76,7 +71,6 @@ async function loadGroupInfo() {
             return;
         }
 
-    
         currentGroup = await groupResponse.json();
 
         // Update header
@@ -89,15 +83,11 @@ async function loadGroupInfo() {
             currentGroup.groupName.charAt(0).toUpperCase();
         document.getElementById("infoGroupName").textContent = currentGroup.groupName;
         document.getElementById("infoGroupId").textContent = `ID: ${currentGroup.groupId}`;
-
-       
         document.getElementById("memberCountLabel").textContent =
             `Members · ${currentGroup.memberCount}`;
 
-        // Render member list
         renderMembers(currentGroup);
 
-        // Show add member button only if current user is admin
         addMemberSection.style.display =
             currentGroup.adminUsername === currentUsername ? "flex" : "none";
 
@@ -134,7 +124,6 @@ async function loadMessages() {
         const messages = await response.json();
 
         allMessages = Array.isArray(messages) ? messages : [];
-        // FIX: track ids so pollNewMessages() below doesn't add them a second time
         allMessages.forEach(m => seenMessageIds.add(m.id));
         lastPollTimestamp = Date.now();
 
@@ -151,7 +140,6 @@ async function loadMessages() {
 }
 
 // Poll for new messages
-
 async function pollNewMessages() {
     try {
         const response = await fetch(`${API_BASE}/chat/poll?chatId=${encodeURIComponent(chatId)}&since=${lastPollTimestamp}`);
@@ -187,6 +175,16 @@ function renderMessages(messages) {
     });
 }
 
+// NEW: true if the stored media path looks like a common image extension
+function isImagePath(path) {
+    return /\.(png|jpe?g|gif|webp)$/i.test(path || "");
+}
+
+// NEW: builds the URL used to fetch/display an uploaded file (see MediaController)
+function mediaUrl(content) {
+    return `${API_BASE}/media/${content}`;
+}
+
 // Create a single message bubble
 function createMessageBubble(msg) {
     const isMine = msg.senderUsername === currentUsername;
@@ -202,7 +200,12 @@ function createMessageBubble(msg) {
     if (isDeleted) {
         contentHtml = "🚫 This message was deleted";
     } else if (msg.type === "MEDIA") {
-        contentHtml = "📎 Media file";
+        // FIX/NEW: previously this always showed the static text "📎 Media file".
+        // Now it renders the real uploaded image, or a download link otherwise.
+        const url = mediaUrl(msg.content);
+        contentHtml = isImagePath(msg.content)
+            ? `<img src="${url}" alt="shared image" class="message-image" style="max-width:220px;border-radius:12px;display:block;" />`
+            : `<a href="${url}" target="_blank" rel="noopener" class="message-file-link">📎 Download file</a>`;
     } else {
         contentHtml = escapeHtml(msg.content || "");
     }
@@ -216,7 +219,8 @@ function createMessageBubble(msg) {
         ? `<div class="sender-name">${escapeHtml(msg.senderUsername)}</div>`
         : "";
 
-  
+    // Action buttons only carry the message id instead of embedding raw
+    // message content inside an inline onclick string.
     let actionsHtml = "";
     if (isMine && !isDeleted) {
         actionsHtml = `
@@ -247,7 +251,7 @@ function createMessageBubble(msg) {
     return bubble;
 }
 
-// Send message
+// Send a text message
 async function sendMessage() {
     const content = messageInput.value.trim();
     if (!content) return;
@@ -261,7 +265,8 @@ async function sendMessage() {
             body: JSON.stringify({
                 chatId: chatId,
                 sender: currentUsername,
-                content: content
+                content: content,
+                type: "TEXT"
             })
         });
 
@@ -283,7 +288,7 @@ async function sendMessage() {
                 edited: false,
                 deleted: false
             };
-            seenMessageIds.add(data.messageId); // FIX: prevents the poll loop from re-adding this message
+            seenMessageIds.add(data.messageId);
             allMessages.push(newMessage);
             renderMessages(allMessages);
             scrollToBottom();
@@ -294,6 +299,85 @@ async function sendMessage() {
         messageInput.value = content;
     }
 }
+
+// NEW: converts a selected File into a base64 data URL for upload
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result); // "data:<type>;base64,...."
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+// NEW: full upload flow - upload the file to /api/media/upload, then send a
+// MEDIA message pointing at the saved path. Replaces the old placeholder that
+// just showed an alert saying uploads weren't implemented yet.
+fileInput.addEventListener("change", async () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    try {
+        const base64Data = await fileToBase64(file);
+
+        const uploadResponse = await fetch(`${API_BASE}/media/upload`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                fileName: file.name,
+                fileData: base64Data
+            })
+        });
+
+        if (!uploadResponse.ok) {
+            const errData = await uploadResponse.json().catch(() => ({}));
+            alert(errData.error || "Failed to upload file.");
+            return;
+        }
+
+        const uploadData = await uploadResponse.json();
+        const filePath = uploadData.path;
+
+        const sendResponse = await fetch(`${API_BASE}/chat/send`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                chatId: chatId,
+                sender: currentUsername,
+                content: filePath,
+                type: "MEDIA"
+            })
+        });
+
+        if (!sendResponse.ok) {
+            const errData = await sendResponse.json().catch(() => ({}));
+            alert(errData.error || "Failed to send file.");
+            return;
+        }
+
+        const sendData = await sendResponse.json();
+        if (sendData.messageId) {
+            const newMessage = {
+                id: sendData.messageId,
+                senderUsername: currentUsername,
+                content: filePath,
+                type: "MEDIA",
+                timestamp: localDateTimeArray(),
+                edited: false,
+                deleted: false
+            };
+            seenMessageIds.add(sendData.messageId);
+            allMessages.push(newMessage);
+            renderMessages(allMessages);
+            scrollToBottom();
+        }
+    } catch (err) {
+        console.error("File upload failed:", err);
+        alert("Failed to upload file. Is the server running?");
+    } finally {
+        fileInput.value = "";
+    }
+});
 
 // Info Panel toggle
 infoToggleBtn.addEventListener("click", () => {
@@ -325,11 +409,9 @@ addMemberBtn.addEventListener("click", async () => {
         const data = await response.json();
         if (response.ok && data.status === "member added") {
             addMemberInput.value = "";
-            // Refresh group info
             await loadGroupInfo();
             alert(`${username} added to the group!`);
         } else {
-            
             alert(data.error || "Failed to add member.");
         }
     } catch (err) {
@@ -347,7 +429,6 @@ document.getElementById("leaveCancelBtn").addEventListener("click", () => {
     document.getElementById("leaveDialog").style.display = "none";
 });
 
-
 document.getElementById("leaveConfirmBtn").addEventListener("click", async () => {
     if (!currentGroup) return;
     try {
@@ -364,7 +445,7 @@ document.getElementById("leaveConfirmBtn").addEventListener("click", async () =>
             alert(errData.error || "Failed to leave the group.");
             return;
         }
-        window.location.href = "../pages/home.html";
+        window.location.href = "home.html";
     } catch (err) {
         console.error("Failed to leave group:", err);
         alert("Could not connect to server.");
@@ -372,10 +453,13 @@ document.getElementById("leaveConfirmBtn").addEventListener("click", async () =>
 });
 
 // Edit message dialog
-
 function openEditDialog(messageId) {
     const msg = allMessages.find(m => m.id === messageId);
     if (!msg) return;
+    if (msg.type === "MEDIA") {
+        alert("Media messages can't be edited. You can delete and resend instead.");
+        return;
+    }
     editingMessageId = messageId;
     document.getElementById("editInput").value = msg.content || "";
     document.getElementById("editDialog").style.display = "flex";
@@ -494,7 +578,7 @@ messageSearchInput.addEventListener("input", () => {
     filtered.forEach(msg => {
         const bubble = createMessageBubble(msg);
         const contentEl = bubble.querySelector(".bubble-content");
-        if (contentEl && msg.content) {
+        if (contentEl && msg.type !== "MEDIA" && msg.content) {
             const regex = new RegExp(`(${escapeRegex(query)})`, "gi");
             contentEl.innerHTML = escapeHtml(msg.content).replace(
                 regex, `<span class="highlight">$1</span>`
@@ -513,14 +597,6 @@ messageInput.addEventListener("keydown", (e) => {
 });
 
 sendBtn.addEventListener("click", sendMessage);
-
-// File attach placeholder (upload endpoint not implemented yet)
-fileInput.addEventListener("change", () => {
-    if (fileInput.files.length > 0) {
-        alert(`File "${fileInput.files[0].name}" selected. File upload is not implemented yet.`);
-        fileInput.value = "";
-    }
-});
 
 // Close dialogs when clicking outside
 ["editDialog", "deleteDialog", "leaveDialog"].forEach(id => {
