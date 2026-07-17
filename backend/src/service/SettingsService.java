@@ -14,6 +14,7 @@ public class SettingsService {
     }
 
     //account change methodes
+
     public boolean changeNumber(String userId, String number){
         User user= userRepository.getByUserId(userId);
         if (user==null || number==null)
@@ -21,6 +22,7 @@ public class SettingsService {
         if (userRepository.existsByNumber(number))
             return false;
         user.setNumber(number);
+        userRepository.save();
         return true;
     }
 
@@ -31,6 +33,7 @@ public class SettingsService {
         if (userRepository.existsByUsername(username) && !user.getUsername().equals(username))
             return false ;
         user.setUsername(username);
+        userRepository.save();
         return true;
     }
 
@@ -43,6 +46,7 @@ public class SettingsService {
 
         String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
         user.setPassword(hashedPassword);
+        userRepository.save();
         return true;
     }
 
@@ -51,6 +55,7 @@ public class SettingsService {
         if (user==null || background==null)
             return false;
         user.setBackground(background);
+        userRepository.save();
         return true;
     }
 
@@ -65,6 +70,7 @@ public class SettingsService {
         if (user==null || profileImage==null)
             return false;
         user.setProfileImage(profileImage);
+        userRepository.save();
         return true;
     }
 
@@ -73,6 +79,7 @@ public class SettingsService {
         if (user==null || newName==null)
             return false;
         user.setDisplayName(newName);
+        userRepository.save();
         return true;
     }
 
@@ -81,6 +88,7 @@ public class SettingsService {
         if (user==null || biography==null)
             return false;
         user.setBiography(biography);
+        userRepository.save();
         return true;
     }
 
@@ -91,6 +99,7 @@ public class SettingsService {
         if (user==null)
             return false;
         user.setDarkMode(darkmode);
+        userRepository.save();
         return true;
     }
 

@@ -1,38 +1,48 @@
 package repository;
 
 import model.User;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
+import com.google.gson.Gson;
 
 public class UserRepository {
 
-    private List<User> users;
+    private final List<User> users;
+    private final Path filePath = Paths.get("database/users.txt");
+    private final Gson gson = PersistenceGson.getGson();
 
-    public UserRepository(){
-        users = new CopyOnWriteArrayList<>();
+    public UserRepository() {
+        this.users = new CopyOnWriteArrayList<>();
+        load();
     }
 
-    //save a user
-    public boolean addUser(User user){
+    // save a user
+
+    public synchronized boolean addUser(User user) {
         if (user == null)
             return false;
         if (existsByUsername(user.getUsername()))
+            return false;
+        if (existsByNumber(user.getNumber()))
             return false;
         if (getByUserId(user.getUserId()) != null)
             return false;
 
         users.add(user);
+        save();
         return true;
     }
 
-    //find a user by username
-    public User getByUsername(String username){
-        if (username==null)
+    // find a user by username
+    public User getByUsername(String username) {
+        if (username == null)
             return null;
 
-        for (User user: users){
+        for (User user : users) {
             if (user.getUsername().equals(username))
                 return user;
         }
@@ -40,12 +50,12 @@ public class UserRepository {
         return null;
     }
 
-    //find a user by unique id
-    public User getByUserId(String userId){
-        if (userId==null)
+
+    public User getByUserId(String userId) {
+        if (userId == null)
             return null;
 
-        for (User user: users){
+        for (User user : users) {
             if (user.getUserId().equals(userId))
                 return user;
         }
@@ -53,12 +63,12 @@ public class UserRepository {
         return null;
     }
 
-    //find a user by number
-    public User getByNumber(String number){
-        if (number==null)
+    // find a user by number
+    public User getByNumber(String number) {
+        if (number == null)
             return null;
 
-        for (User user: users){
+        for (User user : users) {
             if (user.getNumber().equals(number))
                 return user;
         }
@@ -66,28 +76,30 @@ public class UserRepository {
         return null;
     }
 
-    //delete a user by id
-    public boolean deleteUserByUserId(String userId){
-        if (userId==null)
+
+    public synchronized boolean deleteUserByUserId(String userId) {
+        if (userId == null)
             return false;
 
-        User user=getByUserId(userId);//create a user
-        if (user!=null) {
+        User user = getByUserId(userId);
+        if (user != null) {
             users.remove(user);
+            save();
             return true;
         }
 
         return false;
     }
 
-    //delete a user by number
-    public boolean deleteUserByNumber(String number){
-        if (number==null)
+    // delete a user by number
+    public synchronized boolean deleteUserByNumber(String number) {
+        if (number == null)
             return false;
 
-        for (User user: users){
+        for (User user : users) {
             if (user.getNumber().equals(number)) {
                 users.remove(user);
+                save();
                 return true;
             }
         }
@@ -95,22 +107,45 @@ public class UserRepository {
         return false;
     }
 
-    //check for the existence of a user by username
-    public boolean existsByUsername(String username){
-        if (getByUsername(username)==null)
-            return false;
-        return true;
+    // check for the existence of a user by username
+    public boolean existsByUsername(String username) {
+        return getByUsername(username) != null;
     }
 
-    //check for the existence of a user by number
-    public boolean existsByNumber(String number){
-        if (getByNumber(number)==null)
-            return false;
-        return true;
+    // check for the existence of a user by number
+    public boolean existsByNumber(String number) {
+        return getByNumber(number) != null;
     }
 
-    //getter
+    // getter
     public List<User> getUsers() {
         return new ArrayList<>(users);
+    }
+
+    // save users to database
+
+    public void save() {
+        List<String> lines = new ArrayList<>();
+        for (User user : users) {
+            lines.add(gson.toJson(user));
+        }
+        FileDatabase.writeLines(filePath, lines);
+    }
+
+    // load database
+    public void load() {
+        List<String> lines = FileDatabase.readLines(filePath);
+        users.clear();
+
+        for (String line : lines) {
+            try {
+                User user = gson.fromJson(line, User.class);
+                if (user != null && user.getUsername() != null) {
+                    users.add(user);
+                }
+            } catch (Exception e) {
+                System.err.println("Skipping corrupted user line: " + e.getMessage());
+            }
+        }
     }
 }

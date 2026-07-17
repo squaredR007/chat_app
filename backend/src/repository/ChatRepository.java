@@ -1,43 +1,87 @@
 package repository;
 
-import model.Chat ;
-import java.util.ArrayList ;
-import java.util.HashMap ;
-import java.util.List ;
-import java.util.Map ;
-import java.util.concurrent.ConcurrentHashMap ;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import model.Chat;
+import model.GroupChat;
+import model.PrivateChat;
 
-//used HashMap to store data in memory . It is temporary for phase1
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ChatRepository {
 
-    //The chat object can be stored here by using chatId as key
+    private final List<Chat> chats;
+    private final Path filePath = Paths.get("database/chats.txt");
+    private final Gson gson;
 
-   private Map<String , Chat> chats = new ConcurrentHashMap<>() ;
+    public ChatRepository() {
+        this.chats = new CopyOnWriteArrayList<>();
 
-   //saving or editing a chat
-
-    public void save (Chat chat) {
-        chats.put(chat.getChatId(), chat) ;
+        this.gson = PersistenceGson.getGson();
+        loadChatsFromFile();
     }
 
-    //finding a chat using its id .
+    private void loadChatsFromFile() {
+        List<String> lines = FileDatabase.readLines(filePath);
+        for (String line : lines) {
+            try {
+                JsonObject jsonObject = gson.fromJson(line, JsonObject.class);
 
-    public Chat findById (String chatId) {
-        return chats.get(chatId) ;
+                if (jsonObject.has("group")) {
+                    GroupChat groupChat = gson.fromJson(line, GroupChat.class);
+                    chats.add(groupChat);
+                } else {
+                    PrivateChat privateChat = gson.fromJson(line, PrivateChat.class);
+                    chats.add(privateChat);
+                }
+            } catch (Exception e) {
+
+                System.err.println("Skipping corrupted chat line: " + e.getMessage());
+            }
+        }
     }
 
-    //returning all chats in an arrayList
-
-    public List<Chat> findAll() {
-        return new ArrayList<>(chats.values()) ;
+    public void saveAll() {
+        List<String> lines = new ArrayList<>();
+        for (Chat chat : chats) {
+            lines.add(gson.toJson(chat));
+        }
+        FileDatabase.writeLines(filePath, lines);
     }
 
-    //removing a chat by its id
+    public void save(Chat chat) {
+        if (!chats.contains(chat)) {
+            chats.add(chat);
+        }
+        saveAll();
+    }
 
-    public void delete(String chatId) {
-        chats.remove(chatId) ;
+    public Chat getByChatId(String chatId) {
+        if (chatId == null) return null;
+        for (Chat chat : chats) {
+            if (chat.getChatId().equals(chatId)) {
+                return chat;
+            }
+        }
+        return null;
     }
 
 
+    public boolean delete(String chatId) {
+        Chat chat = getByChatId(chatId);
+        if (chat == null) {
+            return false;
+        }
+        chats.remove(chat);
+        saveAll();
+        return true;
+    }
+
+    public List<Chat> getChats() {
+        return new ArrayList<>(chats);
+    }
 }

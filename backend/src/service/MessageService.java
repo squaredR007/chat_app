@@ -111,6 +111,7 @@ public class MessageService {
         if (m.isDeleted())
             throw new RuntimeException("Cannot edit a deleted message");
         m.editContent(newContent);
+        messageRepository.save(chatId , m);
         broadcastEvent("message_edited", chatId, m);
     }
 
@@ -124,6 +125,7 @@ public class MessageService {
             throw new RuntimeException("You can only delete your own messages");
         }
         m.markAsDeleted();
+        messageRepository.save(chatId , m);
 
         broadcastEvent("message_deleted", chatId, m);
     }
@@ -135,6 +137,7 @@ public class MessageService {
         if (m == null)
             throw new RuntimeException("Message not found");
         m.markAsReported();
+        messageRepository.save(chatId , m);
     }
 
     //Returning only new messages since a given timestamp

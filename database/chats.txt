@@ -1,0 +1,3 @@
+{"user1Username":"Reyhaneh","user2Username":"Reyhaneh","chatId":"saved_Reyhaneh","messages":[],"isPinned":false,"isArchived":false}
+{"user1Username":"Zeinab ","user2Username":"Zeinab ","chatId":"saved_Zeinab ","messages":[],"isPinned":false,"isArchived":false}
+{"user1Username":"Zeinab ","user2Username":"Reyhaneh","chatId":"private_Reyhaneh_Zeinab ","messages":[],"isPinned":false,"isArchived":false}

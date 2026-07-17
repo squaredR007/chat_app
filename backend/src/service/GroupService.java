@@ -13,6 +13,8 @@ public class GroupService {
     public GroupService (GroupRepository groupRepository , ChatRepository chatRepository) {
         this.groupRepository = groupRepository ;
         this.chatRepository = chatRepository ;
+        // FIX: removed a stray "this.groupRepository.load();" that used to be here -
+        // GroupRepository's own constructor already loads its data once.
     }
 
     //Creating a group and also a group chat for it
@@ -33,11 +35,16 @@ public class GroupService {
         if (groupRepository.findById(groupId) != null) {
             throw new RuntimeException("A group with this id already exists");
         }
-        if (chatRepository.findById(chatId) != null) {
+        if (chatRepository.getByChatId(chatId) != null) {
             throw new RuntimeException("A chat with this id already exists");
         }
         Group group = new Group(groupId, groupName, adminUsername) ;
+
+        // FIX: this used to call groupRepository.save(group) TWICE in a row (an
+        // accidental duplicate line). Harmless once save() itself is correct, but
+        // it was still a wasted, redundant disk write on every single group creation.
         groupRepository.save(group);
+
         GroupChat groupChat = new GroupChat(chatId , group) ;
         chatRepository.save(groupChat);
         return groupChat ;
@@ -51,6 +58,7 @@ public class GroupService {
             throw new RuntimeException("Group not found");
         }
         groupRepository.delete(groupId);
+
         chatRepository.delete(chatId);
     }
 
@@ -64,10 +72,17 @@ public class GroupService {
         if (username == null || username.trim().isEmpty()) {
             throw new RuntimeException("Username is required");
         }
-        if (group.getMembersUsernames().contains(username)) {
-            throw new RuntimeException("User is already a member of this group");
+        // FIX: synchronize per-group object so two concurrent addMember (or
+        // addMember/removeMember) calls on the same group can't both pass
+        // their "contains" check before either one actually applies its change.
+        synchronized (group) {
+            if (group.getMembersUsernames().contains(username)) {
+                throw new RuntimeException("User is already a member of this group");
+            }
+            group.addMember(username);
+
+            groupRepository.save(group);
         }
-        group.addMember(username);
     }
 
     //Removing a member from the group (Even if they have left themselves)
@@ -77,18 +92,23 @@ public class GroupService {
         if (group == null) {
             throw new RuntimeException("Group not found");
         }
-        if (username == null || !group.getMembersUsernames().contains(username)) {
-            throw new RuntimeException("User is not a member of this group");
-        }
-        boolean wasAdmin = username.equals(group.getAdminUsername()) ;
-        group.removeMember(username);
-
-        if (wasAdmin) {
-            if (!group.getMembersUsernames().isEmpty()) {
-                group.setAdminUsername(group.getMembersUsernames().get(0));
-            } else {
-                group.setAdminUsername(null);
+        // FIX: same per-group synchronization as addMember, see comment there.
+        synchronized (group) {
+            if (username == null || !group.getMembersUsernames().contains(username)) {
+                throw new RuntimeException("User is not a member of this group");
             }
+            boolean wasAdmin = username.equals(group.getAdminUsername()) ;
+            group.removeMember(username);
+
+            if (wasAdmin) {
+                if (!group.getMembersUsernames().isEmpty()) {
+                    group.setAdminUsername(group.getMembersUsernames().get(0));
+                } else {
+                    group.setAdminUsername(null);
+                }
+            }
+
+            groupRepository.save(group);
         }
     }
 
