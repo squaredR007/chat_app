@@ -4,7 +4,7 @@ import model.Chat;
 import model.PrivateChat;
 import repository.ChatRepository;
 import repository.UserRepository;
-
+import model.User;
 import java.util.List;
 
 public class ChatService {
@@ -27,6 +27,20 @@ public class ChatService {
 
         if (chatRepository.getByChatId(chatId) != null) {
             return (PrivateChat) chatRepository.getByChatId(chatId);
+        }
+
+        User firstUser = userRepository.getByUsername(user1);
+        User secondUser = userRepository.getByUsername(user2);
+
+        if (!user1.equals(user2)) {
+            if (firstUser.getBlockedUsers().contains(user2)
+                    || secondUser.getBlockedUsers().contains(user1)) {
+                throw new RuntimeException("User is blocked.");
+            }
+            firstUser.addContact(user2);
+            secondUser.addContact(user1);
+
+            userRepository.save();
         }
 
         PrivateChat chat = new PrivateChat(chatId, user1, user2);

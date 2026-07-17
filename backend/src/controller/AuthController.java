@@ -34,6 +34,8 @@ public class AuthController implements HttpHandler {
                 handleSignup(exchange);
             } else if (path.equals("/api/auth/login") && method.equals("POST")) {
                 handleLogin(exchange);
+            } else if (path.equals("/api/auth/blockUser") && method.equals("POST")) {
+                handleBlockUser(exchange);
             } else {
                 HttpUtils.sendError(exchange, 404, "Endpoint not found");
             }
@@ -109,6 +111,22 @@ public class AuthController implements HttpHandler {
         } else {
             response.addProperty("error" , "Wrong username or password, or the account is temporarily locked.");
         }
+
+        HttpUtils.sendResponse(exchange, 200, response);
+    }
+
+    //handle block contact
+    private void handleBlockUser(HttpExchange exchange) throws IOException {
+
+        JsonObject body = HttpUtils.readBody(exchange);
+
+        String ownerUsername = requireString(body, "ownerUsername");
+        String blockedUsername = requireString(body, "blockedUsername");
+
+        boolean result = authService.blockUser(ownerUsername, blockedUsername);
+
+        JsonObject response = new JsonObject();
+        response.addProperty("success", result);
 
         HttpUtils.sendResponse(exchange, 200, response);
     }
