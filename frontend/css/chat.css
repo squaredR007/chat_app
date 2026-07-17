@@ -93,6 +93,26 @@ body {
     gap: 8px;
 }
 
+#pinBtn {
+    padding: 7px 14px;
+    border: none;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.25);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+#pinBtn:hover {
+    background: rgba(255,255,255,0.4);
+}
+
+#pinBtn.pinned {
+    background: gold;
+    color: #444;
+}
+
 .icon-btn {
     background: none;
     border: none;
@@ -532,4 +552,17 @@ body.dark .message-search-bar input {
     background: #2d1a24;
     color: #f5c2d4;
     border-color: #6b2d4a;
+}
+
+body.dark #pinBtn {
+    background: rgba(255,255,255,0.15);
+}
+
+body.dark #pinBtn:hover {
+    background: rgba(255,255,255,0.25);
+}
+
+body.dark #pinBtn.pinned {
+    background: gold;
+    color: #222;
 }

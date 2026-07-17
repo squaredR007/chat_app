@@ -13,6 +13,8 @@ window.addEventListener("backgroundChanged", () => {
     window.applyGlobalBackground?.();
 });
 
+let isPinned = false;
+
 // ── Config ──
 const API_BASE = "http://localhost:8080/api";
 const POLL_INTERVAL = 3000;
@@ -80,13 +82,16 @@ async function markChatAsRead() {
 async function loadChatInfo() {
     try {
         const response = await fetch(`${API_BASE}/chat/list?username=${encodeURIComponent(currentUsername)}`);
-        const chats = await response.json();
-
         const chat = Array.isArray(chats) ? chats.find(c => c.chatId === chatId) : null;
+
         if (!chat) {
             headerName.textContent = "Unknown Chat";
             return;
         }
+
+        isPinned = chat.pinned;
+        document.getElementById("pinBtn").textContent = isPinned ? "Unpin" : "Pin";
+        document.getElementById("pinBtn").classList.toggle("pinned", isPinned);
 
         const isSaved = chatId.startsWith("saved_");
         if (isSaved) {
@@ -580,6 +585,48 @@ function escapeHtml(text) {
 
 function escapeRegex(text) {
     return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+document.getElementById("pinBtn").addEventListener("click", async () => {
+    if (isPinned) {
+        await unpinChat(chatId);
+        isPinned = false;
+    } else {
+        await pinChat(chatId);
+        isPinned = true;
+    }
+
+    document.getElementById("pinBtn").textContent = isPinned ? "Unpin" : "Pin";
+});
+
+//pin chat
+async function pinChat(chatId) {
+    await fetch(`${API_BASE}/chat/pin`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            chatId: chatId
+        })
+    });
+
+    alert("Chat pinned");
+}
+
+//unpin chat
+async function unpinChat(chatId) {
+    await fetch(`${API_BASE}/chat/unpin`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            chatId: chatId
+        })
+    });
+
+    alert("Chat unpinned");
 }
 
 // ── Init ──
