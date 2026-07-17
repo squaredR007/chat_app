@@ -21,16 +21,12 @@ public class UserRepository {
     }
 
     // save a user
-
-    public synchronized boolean addUser(User user) {
+    public boolean addUser(User user) {
         if (user == null)
             return false;
         if (existsByUsername(user.getUsername()))
             return false;
-        if (existsByNumber(user.getNumber()))
-            return false;
-        if (getByUserId(user.getUserId()) != null)
-            return false;
+
 
         users.add(user);
         save();
@@ -50,19 +46,6 @@ public class UserRepository {
         return null;
     }
 
-
-    public User getByUserId(String userId) {
-        if (userId == null)
-            return null;
-
-        for (User user : users) {
-            if (user.getUserId().equals(userId))
-                return user;
-        }
-
-        return null;
-    }
-
     // find a user by number
     public User getByNumber(String number) {
         if (number == null)
@@ -76,23 +59,8 @@ public class UserRepository {
         return null;
     }
 
-
-    public synchronized boolean deleteUserByUserId(String userId) {
-        if (userId == null)
-            return false;
-
-        User user = getByUserId(userId);
-        if (user != null) {
-            users.remove(user);
-            save();
-            return true;
-        }
-
-        return false;
-    }
-
     // delete a user by number
-    public synchronized boolean deleteUserByNumber(String number) {
+    public boolean deleteUserByNumber(String number) {
         if (number == null)
             return false;
 

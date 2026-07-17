@@ -1,3 +1,18 @@
+document.addEventListener("DOMContentLoaded", () => {
+    if (window.applyGlobalTheme) {
+        window.applyGlobalTheme();
+    }
+
+    if (window.applyGlobalBackground) {
+        window.applyGlobalBackground();
+    }
+});
+
+window.addEventListener("backgroundChanged", () => {
+    window.applyGlobalTheme?.();
+    window.applyGlobalBackground?.();
+});
+
 // Config
 const API_BASE = "http://localhost:8080/api";
 const POLL_INTERVAL = 3000;

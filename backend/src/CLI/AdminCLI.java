@@ -113,7 +113,7 @@ public class AdminCLI {
                             System.out.println("User not found!");
                             break;
                         }
-                        userRepository.deleteUserByUserId(user2.getUserId());
+                        userRepository.deleteUserByNumber(user2.getNumber());
                         System.out.println("user deleted successfully.");
                         break;
 
@@ -173,7 +173,7 @@ public class AdminCLI {
                             System.out.println("message: "+message.getContent());
                             System.out.println();
                         }
-                    break;
+                        break;
 
                     default:
                         System.out.println("the entered value is invalid!");
@@ -184,7 +184,4 @@ public class AdminCLI {
             System.out.println("the username or password is incorrect!");
         }
     }
-
-
-
 }

@@ -9,7 +9,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class FileDatabase {
 
-
     private static final ConcurrentHashMap<String, Object> fileLocks = new ConcurrentHashMap<>();
 
     private static Object lockFor(Path filePath) {

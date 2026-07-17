@@ -2,7 +2,6 @@ package service;
 import org.jasypt.util.text.BasicTextEncryptor;
 
 public class EncryptionService {
-
     private static final String DEFAULT_SECURITY_CODE = "06Zein&Hane07";// fallback password
     private final BasicTextEncryptor encryptor;
 

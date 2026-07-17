@@ -13,8 +13,6 @@ public class GroupService {
     public GroupService (GroupRepository groupRepository , ChatRepository chatRepository) {
         this.groupRepository = groupRepository ;
         this.chatRepository = chatRepository ;
-        // FIX: removed a stray "this.groupRepository.load();" that used to be here -
-        // GroupRepository's own constructor already loads its data once.
     }
 
     //Creating a group and also a group chat for it
@@ -40,9 +38,6 @@ public class GroupService {
         }
         Group group = new Group(groupId, groupName, adminUsername) ;
 
-        // FIX: this used to call groupRepository.save(group) TWICE in a row (an
-        // accidental duplicate line). Harmless once save() itself is correct, but
-        // it was still a wasted, redundant disk write on every single group creation.
         groupRepository.save(group);
 
         GroupChat groupChat = new GroupChat(chatId , group) ;
@@ -72,9 +67,7 @@ public class GroupService {
         if (username == null || username.trim().isEmpty()) {
             throw new RuntimeException("Username is required");
         }
-        // FIX: synchronize per-group object so two concurrent addMember (or
-        // addMember/removeMember) calls on the same group can't both pass
-        // their "contains" check before either one actually applies its change.
+
         synchronized (group) {
             if (group.getMembersUsernames().contains(username)) {
                 throw new RuntimeException("User is already a member of this group");
@@ -92,7 +85,6 @@ public class GroupService {
         if (group == null) {
             throw new RuntimeException("Group not found");
         }
-        // FIX: same per-group synchronization as addMember, see comment there.
         synchronized (group) {
             if (username == null || !group.getMembersUsernames().contains(username)) {
                 throw new RuntimeException("User is not a member of this group");

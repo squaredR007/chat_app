@@ -20,7 +20,6 @@ public class ChatRepository {
 
     public ChatRepository() {
         this.chats = new CopyOnWriteArrayList<>();
-
         this.gson = PersistenceGson.getGson();
         loadChatsFromFile();
     }
@@ -69,7 +68,6 @@ public class ChatRepository {
         }
         return null;
     }
-
 
     public boolean delete(String chatId) {
         Chat chat = getByChatId(chatId);

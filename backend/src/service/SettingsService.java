@@ -14,9 +14,8 @@ public class SettingsService {
     }
 
     //account change methodes
-
-    public boolean changeNumber(String userId, String number){
-        User user= userRepository.getByUserId(userId);
+    public boolean changeNumber(String username, String number){
+        User user= userRepository.getByUsername(username);
         if (user==null || number==null)
             return false;
         if (userRepository.existsByNumber(number))
@@ -26,32 +25,32 @@ public class SettingsService {
         return true;
     }
 
-    public boolean changeUsername(String userId, String username){
-        User user= userRepository.getByUserId(userId);
-        if (user==null || username==null)
+    public boolean changeUsername(String oldUsername, String newUsername){
+        User user= userRepository.getByUsername(oldUsername);
+        if (user==null || newUsername==null)
             return false;
-        if (userRepository.existsByUsername(username) && !user.getUsername().equals(username))
+        if (userRepository.existsByUsername(newUsername) && !user.getUsername().equals(newUsername))
             return false ;
-        user.setUsername(username);
+        user.setUsername(newUsername);
         userRepository.save();
         return true;
     }
 
-    public boolean changePassword(String userId, String password){
-        User user = userRepository.getByUserId(userId);
-        if (user == null || password == null)
+    public boolean changePassword(String username, String newPassword){
+        User user = userRepository.getByUsername(username);
+        if (user == null || newPassword == null)
             return false;
-        if (!isValidPassword(password, user.getUsername()))
+        if (!isValidPassword(newPassword, user.getUsername()))
             return false;
 
-        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+        String hashedPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt());
         user.setPassword(hashedPassword);
         userRepository.save();
         return true;
     }
 
-    public boolean changeBackground(String userId, String background){
-        User user= userRepository.getByUserId(userId);
+    public boolean changeBackground(String username, String background){
+        User user= userRepository.getByUsername(username);
         if (user==null || background==null)
             return false;
         user.setBackground(background);
@@ -59,14 +58,14 @@ public class SettingsService {
         return true;
     }
 
-    public boolean deletedAccount(String userId){
-        return userRepository.deleteUserByUserId(userId);
+    public boolean deletedAccount(String number){
+        return userRepository.deleteUserByNumber(number);
     }
 
 
     //profile change methodes
-    public boolean changeProfileImage(String userId, String profileImage){
-        User user= userRepository.getByUserId(userId);
+    public boolean changeProfileImage(String username, String profileImage){
+        User user= userRepository.getByUsername(username);
         if (user==null || profileImage==null)
             return false;
         user.setProfileImage(profileImage);
@@ -74,8 +73,8 @@ public class SettingsService {
         return true;
     }
 
-    public boolean changeDisplayName(String userId, String newName){
-        User user= userRepository.getByUserId(userId);
+    public boolean changeDisplayName(String username, String newName){
+        User user= userRepository.getByUsername(username);
         if (user==null || newName==null)
             return false;
         user.setDisplayName(newName);
@@ -83,8 +82,8 @@ public class SettingsService {
         return true;
     }
 
-    public boolean changeBiography(String userId, String biography){
-        User user= userRepository.getByUserId(userId);
+    public boolean changeBiography(String username, String biography){
+        User user= userRepository.getByUsername(username);
         if (user==null || biography==null)
             return false;
         user.setBiography(biography);
@@ -94,8 +93,8 @@ public class SettingsService {
 
 
     //chat change methodes
-    public boolean changeDarkMode(String userId, boolean darkmode){
-        User user= userRepository.getByUserId(userId);
+    public boolean changeDarkMode(String username, boolean darkmode){
+        User user= userRepository.getByUsername(username);
         if (user==null)
             return false;
         user.setDarkMode(darkmode);

@@ -92,13 +92,6 @@ public class MessageRepository {
         FileDatabase.writeLines(path, lines);
     }
 
-    // FIX: this used to unconditionally do .add(message), even when "message" was
-    // an object already living inside the list (exactly what editMessage/deleteMessage/
-    // reportMessage in MessageService do: they find the existing Message by id, mutate
-    // it in place, then call save() again "to persist the change"). That caused the
-    // same message to be appended a second time on every edit/delete/report, so the
-    // in-memory list (and the file on disk) accumulated duplicate copies of the message
-    // forever. Now it only adds when a message with this id isn't already present.
     public void save(String chatId, Message message) {
         List<Message> chatMessages = messagesByChatId.computeIfAbsent(chatId, k -> new CopyOnWriteArrayList<>());
         boolean alreadyPresent = false;
@@ -114,10 +107,6 @@ public class MessageRepository {
         updateMessagePersistence(chatId);
     }
 
-    // FIX: this used to return the live internal CopyOnWriteArrayList reference
-    // directly, letting any caller mutate the repository's internal state without
-    // going through save()/delete(). Returning a copy keeps the repository's
-    // invariants (id-uniqueness, persistence-on-write) safe from outside callers.
     public List<Message> findByChatId(String chatId) {
         List<Message> chatMessages = messagesByChatId.get(chatId);
         if (chatMessages == null) return new ArrayList<>();

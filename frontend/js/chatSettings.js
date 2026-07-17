@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.applyGlobalTheme();
     window.applyGlobalBackground();
+    window.dispatchEvent(new Event("backgroundChanged"));
     saveTheme(isDark);
     });
 }
@@ -27,6 +28,7 @@ const options = document.querySelectorAll(".background-option");
         option.addEventListener("click", () => {
             localStorage.setItem("background", background);
             window.applyGlobalBackground();
+            window.dispatchEvent(new Event("backgroundChanged"));
             saveBackground(background);
         });
     });

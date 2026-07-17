@@ -56,9 +56,6 @@ public class AuthService {
         if (user==null)
             return false;
 
-        // FIX: synchronize per-user to prevent lost updates when concurrent
-        // requests race on the same account's failedLoginAttempts/lockUntil
-        // fields (see method javadoc-style comment above for details).
         synchronized (user) {
             long now = System.currentTimeMillis();
 
