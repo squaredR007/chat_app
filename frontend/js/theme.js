@@ -11,23 +11,35 @@
     function applyGlobalBackground() {
         const backgroundName = localStorage.getItem("background");
 
-        if (!backgroundName) return;
+        if (!backgroundName) {
+            document.body.style.backgroundImage = "";
+            return;
+        }
 
-        const mode = localStorage.getItem("theme") === "dark" ? "dark" : "light";
+        const mode =
+            localStorage.getItem("theme") === "dark"
+                ? "dark"
+                : "light";
 
-        document.body.style.backgroundImage = `url("../image/${backgroundName}-${mode}.png")`;
+        const imagePath = `../image/${backgroundName}-${mode}.png`;
+
+        document.body.style.backgroundImage = `url("${imagePath}")`;
         document.body.style.backgroundSize = "cover";
         document.body.style.backgroundPosition = "center";
         document.body.style.backgroundRepeat = "no-repeat";
         document.body.style.backgroundAttachment = "fixed";
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-        applyGlobalTheme();
-        applyGlobalBackground();
-    });
-
-
     window.applyGlobalTheme = applyGlobalTheme;
     window.applyGlobalBackground = applyGlobalBackground;
+
+    function refreshTheme() {
+        applyGlobalTheme();
+        applyGlobalBackground();
+    }
+
+    document.addEventListener("DOMContentLoaded", refreshTheme);
+
+    window.addEventListener("pageshow", refreshTheme);
+
 })();

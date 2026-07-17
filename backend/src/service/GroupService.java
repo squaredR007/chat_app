@@ -33,11 +33,13 @@ public class GroupService {
         if (groupRepository.findById(groupId) != null) {
             throw new RuntimeException("A group with this id already exists");
         }
-        if (chatRepository.findById(chatId) != null) {
+        if (chatRepository.getByChatId(chatId) != null) {
             throw new RuntimeException("A chat with this id already exists");
         }
         Group group = new Group(groupId, groupName, adminUsername) ;
+
         groupRepository.save(group);
+
         GroupChat groupChat = new GroupChat(chatId , group) ;
         chatRepository.save(groupChat);
         return groupChat ;
@@ -51,6 +53,7 @@ public class GroupService {
             throw new RuntimeException("Group not found");
         }
         groupRepository.delete(groupId);
+
         chatRepository.delete(chatId);
     }
 
@@ -64,10 +67,15 @@ public class GroupService {
         if (username == null || username.trim().isEmpty()) {
             throw new RuntimeException("Username is required");
         }
-        if (group.getMembersUsernames().contains(username)) {
-            throw new RuntimeException("User is already a member of this group");
+
+        synchronized (group) {
+            if (group.getMembersUsernames().contains(username)) {
+                throw new RuntimeException("User is already a member of this group");
+            }
+            group.addMember(username);
+
+            groupRepository.save(group);
         }
-        group.addMember(username);
     }
 
     //Removing a member from the group (Even if they have left themselves)
@@ -77,18 +85,22 @@ public class GroupService {
         if (group == null) {
             throw new RuntimeException("Group not found");
         }
-        if (username == null || !group.getMembersUsernames().contains(username)) {
-            throw new RuntimeException("User is not a member of this group");
-        }
-        boolean wasAdmin = username.equals(group.getAdminUsername()) ;
-        group.removeMember(username);
-
-        if (wasAdmin) {
-            if (!group.getMembersUsernames().isEmpty()) {
-                group.setAdminUsername(group.getMembersUsernames().get(0));
-            } else {
-                group.setAdminUsername(null);
+        synchronized (group) {
+            if (username == null || !group.getMembersUsernames().contains(username)) {
+                throw new RuntimeException("User is not a member of this group");
             }
+            boolean wasAdmin = username.equals(group.getAdminUsername()) ;
+            group.removeMember(username);
+
+            if (wasAdmin) {
+                if (!group.getMembersUsernames().isEmpty()) {
+                    group.setAdminUsername(group.getMembersUsernames().get(0));
+                } else {
+                    group.setAdminUsername(null);
+                }
+            }
+
+            groupRepository.save(group);
         }
     }
 

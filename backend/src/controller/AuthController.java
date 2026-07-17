@@ -67,12 +67,14 @@ public class AuthController implements HttpHandler {
         JsonObject response = new JsonObject();
         response.addProperty("success", result);
         if (result) {
-            // return user info so frontend can store it immediately
             User user = userRepository.getByUsername(username);
             if (user != null) {
-                response.addProperty("userId", user.getUserId());
+                response.addProperty("userId", user.getUsername());
                 response.addProperty("username", user.getUsername());
                 response.addProperty("displayName", user.getDisplayName() != null ? user.getDisplayName() : username);
+                response.addProperty("profileImage", user.getProfileImage() != null ? user.getProfileImage() : "");
+                response.addProperty("darkMode", user.isDarkMode());
+                response.addProperty("background", user.getBackground() != null ? user.getBackground() : "");
             }
         } else {
             response.addProperty("error" , "Signup failed. Username/number may already be taken, or the password may be invalid");
@@ -94,13 +96,15 @@ public class AuthController implements HttpHandler {
         response.addProperty("success", result);
 
         if (result) {
-            // turning back users info to be saved in local storage
 
             User user = userRepository.getByUsername(username);
             if (user != null) {
-                response.addProperty("userId", user.getUserId());
+                response.addProperty("userId", user.getUsername());
                 response.addProperty("username", user.getUsername());
                 response.addProperty("displayName", user.getDisplayName() != null ? user.getDisplayName() : username);
+                response.addProperty("profileImage", user.getProfileImage() != null ? user.getProfileImage() : "");
+                response.addProperty("darkMode", user.isDarkMode());
+                response.addProperty("background", user.getBackground() != null ? user.getBackground() : "");
             }
         } else {
             response.addProperty("error" , "Wrong username or password, or the account is temporarily locked.");

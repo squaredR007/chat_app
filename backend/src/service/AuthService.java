@@ -15,6 +15,7 @@ public class AuthService {
     public AuthService(UserRepository userRepository , ChatService chatService){
         this.userRepository=userRepository;
         this.chatService = chatService ;
+
     }
 
     //signup
@@ -36,6 +37,8 @@ public class AuthService {
 
         //create user and saved message
         User user=new User.Builder().username(username).password(hashedPassword).number(number).failedLoginAttempts(0).lockUntil(0).build();
+
+        // write with stale data.
         boolean saved = userRepository.addUser(user) ;
 
         if (saved) {
@@ -53,31 +56,37 @@ public class AuthService {
         if (user==null)
             return false;
 
-        long now = System.currentTimeMillis();
+        synchronized (user) {
+            long now = System.currentTimeMillis();
 
-        // if the account is locked
-        if (user.getLockUntil() > now)
-            return false;
+            // if the account is locked
+            if (user.getLockUntil() > now)
+                return false;
 
-        //unlock account
-        if (user.getLockUntil() > 0 && user.getLockUntil() <= now) {
+            //unlock account
+            if (user.getLockUntil() > 0 && user.getLockUntil() <= now) {
+                user.resetLoginAttempts();
+                user.setLockUntil(0);
+
+                userRepository.save();
+            }
+
+            //if the wrong password is entered
+            if (!BCrypt.checkpw(password, user.getPassword())) {
+                user.incrementFailedLoginAttempts();
+                if (user.getFailedLoginAttempts() >= maxFailedAttempts) {
+                    user.setLockUntil(now + lockDuration);
+                }
+                userRepository.save();
+                return false;
+            }
+
+            //successful status
             user.resetLoginAttempts();
             user.setLockUntil(0);
+            userRepository.save();
+            return true;
         }
-
-        //if the wrong password is entered
-        if (!BCrypt.checkpw(password, user.getPassword())) {
-            user.incrementFailedLoginAttempts();
-            if (user.getFailedLoginAttempts() >= maxFailedAttempts) {
-                user.setLockUntil(now + lockDuration);
-            }
-            return false;
-        }
-
-        //successful status
-        user.resetLoginAttempts();
-        user.setLockUntil(0);
-        return true;
     }
 
     private boolean isValidPassword(String password, String username) {
