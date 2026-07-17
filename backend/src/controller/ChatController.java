@@ -57,6 +57,8 @@ public class ChatController implements HttpHandler {
                 handleUnarchiveChat(exchange);
             } else if (path.equals("/api/chat/markRead") && method.equals("POST")) {
                 handleMarkAsRead(exchange);
+            } else if (path.equals("/api/chat/history") && method.equals("GET")) {
+                handleGetMessageHistory(exchange);
             } else {
                 HttpUtils.sendError(exchange, 404, "Endpoint not found");
             }
@@ -125,11 +127,16 @@ public class ChatController implements HttpHandler {
             chatJson.addProperty("pinned", chat.isPinned());
             chatJson.addProperty("archived", chat.isArchived());
 
+            // Include the requesting user's last-read timestamp (0 if never read)
+            // so the client can compute unread counts without relying on localStorage.
             if (filterUsername != null) {
                 chatJson.addProperty("lastReadTimestamp", chat.getLastReadTimestamp(filterUsername));
             }
 
-
+            // Messages are stored via MessageService/MessageRepository (one file per
+            // chat), NOT on the Chat object itself — sendMessage() never calls
+            // chat.addMessage(), so chat.getMessages() is always empty. Pull the
+            // real messages the same way handleGetMessages() does.
             com.google.gson.JsonArray messagesArray = new com.google.gson.JsonArray();
             List<Message> chatMessages = messageService.getMessages(chat.getChatId());
             if (chatMessages != null) {
@@ -141,7 +148,9 @@ public class ChatController implements HttpHandler {
                     msgJson.addProperty("type", msg.getType().toString());
                     msgJson.addProperty("deleted", msg.isDeleted());
                     msgJson.addProperty("edited", msg.isEdited());
-
+                    // Serialize timestamp the same way HttpUtils' Gson instance does
+                    // for every other endpoint (LocalDateTime -> [y,m,d,h,min,sec,nano]),
+                    // since here we're building JSON by hand instead of calling gson.toJson(msg).
                     msgJson.add("timestamp", HttpUtils.getGson().toJsonTree(msg.getTimestamp()));
                     messagesArray.add(msgJson);
                 }
@@ -354,5 +363,15 @@ public class ChatController implements HttpHandler {
         JsonObject response = new JsonObject();
         response.addProperty("status", "marked as read");
         HttpUtils.sendResponse(exchange, 200, response);
+    }
+
+    // Returns edited/deleted messages of a chat for the history page
+    private void handleGetMessageHistory(HttpExchange exchange) throws IOException {
+        String query = exchange.getRequestURI().getQuery();
+        JsonObject queryParams = HttpUtils.parseQueryString(query);
+        String chatId = requireQueryParam(queryParams, "chatId");
+
+        List<Message> history = messageService.getEditedOrDeletedMessages(chatId);
+        HttpUtils.sendResponse(exchange, 200, history);
     }
 }

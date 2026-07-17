@@ -68,6 +68,14 @@ public class Message {
 
     public void setContent(String content) {this.content = content; }
 
+    public String getPreviousContent() {
+        return previousContent;
+    }
+
+    public void setPreviousContent(String previousContent) {
+        this.previousContent = previousContent;
+    }
+
     public MessageType getType() {
         return type;
     }

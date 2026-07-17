@@ -28,6 +28,7 @@
 
             <div class="header-actions">
                 <button class="icon-btn" id="searchToggleBtn" title="Search messages">🔍</button>
+                <a class="icon-btn" id="historyBtn" title="Edited/deleted message history">🕘</a>
                 <button class="icon-btn" id="infoToggleBtn" title="Group info">ℹ️</button>
             </div>
         </header>
@@ -90,6 +91,7 @@
 
         <!-- Actions -->
         <div class="info-actions">
+            <button class="info-action-btn" id="editGroupBtn" style="display:none;">✏️ Edit Group Info</button>
             <button class="info-action-btn leave" id="leaveGroupBtn">🚪 Leave Group</button>
         </div>
 
@@ -129,6 +131,19 @@
         <div class="dialog-actions">
             <button class="dialog-btn cancel" id="leaveCancelBtn">Cancel</button>
             <button class="dialog-btn confirm danger" id="leaveConfirmBtn">Leave</button>
+        </div>
+    </div>
+</div>
+
+<!-- edit group info -->
+<div class="dialog-overlay" id="editGroupDialog" style="display:none;">
+    <div class="dialog">
+        <h3>Edit Group Info</h3>
+        <input type="text" id="editGroupNameInput" placeholder="Group name" />
+        <textarea id="editGroupDescInput" rows="3" placeholder="Group description"></textarea>
+        <div class="dialog-actions">
+            <button class="dialog-btn cancel" id="editGroupCancelBtn">Cancel</button>
+            <button class="dialog-btn confirm" id="editGroupConfirmBtn">Save</button>
         </div>
     </div>
 </div>

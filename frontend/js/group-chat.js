@@ -57,6 +57,11 @@ const addMemberSection = document.getElementById("addMemberSection");
 const addMemberInput = document.getElementById("addMemberInput");
 const addMemberBtn = document.getElementById("addMemberBtn");
 const leaveGroupBtn = document.getElementById("leaveGroupBtn");
+const historyBtn = document.getElementById("historyBtn");
+const editGroupBtn = document.getElementById("editGroupBtn");
+const editGroupDialog = document.getElementById("editGroupDialog");
+const editGroupNameInput = document.getElementById("editGroupNameInput");
+const editGroupDescInput = document.getElementById("editGroupDescInput");
 
 // State
 let allMessages = [];
@@ -115,6 +120,9 @@ async function loadGroupInfo() {
         renderMembers(currentGroup);
 
         addMemberSection.style.display =
+            currentGroup.adminUsername === currentUsername ? "flex" : "none";
+
+        editGroupBtn.style.display =
             currentGroup.adminUsername === currentUsername ? "flex" : "none";
 
     } catch (err) {
@@ -414,6 +422,8 @@ infoToggleBtn.addEventListener("click", () => {
     infoPanel.classList.toggle("open");
 });
 
+historyBtn.href = `history.html?chatId=${encodeURIComponent(chatId)}`;
+
 document.getElementById("headerInfo").addEventListener("click", () => {
     infoPanel.classList.toggle("open");
 });
@@ -478,6 +488,50 @@ document.getElementById("leaveConfirmBtn").addEventListener("click", async () =>
         window.location.href = "home.html";
     } catch (err) {
         console.error("Failed to leave group:", err);
+        alert("Could not connect to server.");
+    }
+});
+
+// Edit group info dialog (admin only — button is hidden otherwise)
+editGroupBtn.addEventListener("click", () => {
+    if (!currentGroup) return;
+    editGroupNameInput.value = currentGroup.groupName || "";
+    editGroupDescInput.value = currentGroup.description || "";
+    editGroupDialog.style.display = "flex";
+});
+
+document.getElementById("editGroupCancelBtn").addEventListener("click", () => {
+    editGroupDialog.style.display = "none";
+});
+
+document.getElementById("editGroupConfirmBtn").addEventListener("click", async () => {
+    if (!currentGroup) return;
+
+    const newName = editGroupNameInput.value.trim();
+    const newDesc = editGroupDescInput.value.trim();
+
+    try {
+        const response = await fetch(`${API_BASE}/group/update`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                groupId: currentGroup.groupId,
+                requestingUsername: currentUsername,
+                groupName: newName,
+                description: newDesc
+            })
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            alert(data.error || "Failed to update group info.");
+            return;
+        }
+
+        editGroupDialog.style.display = "none";
+        await loadGroupInfo();
+    } catch (err) {
+        console.error("Failed to update group info:", err);
         alert("Could not connect to server.");
     }
 });
@@ -629,7 +683,7 @@ messageInput.addEventListener("keydown", (e) => {
 sendBtn.addEventListener("click", sendMessage);
 
 // Close dialogs when clicking outside
-["editDialog", "deleteDialog", "leaveDialog"].forEach(id => {
+["editDialog", "deleteDialog", "leaveDialog", "editGroupDialog"].forEach(id => {
     document.getElementById(id).addEventListener("click", (e) => {
         if (e.target === document.getElementById(id)) {
             document.getElementById(id).style.display = "none";

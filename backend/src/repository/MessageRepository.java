@@ -53,6 +53,9 @@ public class MessageRepository {
                     if (message.getType() == Message.MessageType.TEXT && message.getContent() != null) {
                         message.setContent(encryptionService.decrypt(message.getContent()));
                     }
+                    if (message.getType() == Message.MessageType.TEXT && message.getPreviousContent() != null) {
+                        message.setPreviousContent(encryptionService.decrypt(message.getPreviousContent()));
+                    }
                     chatMessages.add(message);
                 } catch (Exception e) {
                     System.err.println("Skipping corrupted message in " + fileName + ": " + e.getMessage());
@@ -70,10 +73,13 @@ public class MessageRepository {
 
         for (Message originalMsg : chatMessages) {
             String contentForFile = originalMsg.getContent();
-
+            String previousContentForFile = originalMsg.getPreviousContent();
 
             if (originalMsg.getType() == Message.MessageType.TEXT && contentForFile != null) {
                 contentForFile = encryptionService.encrypt(contentForFile);
+            }
+            if (originalMsg.getType() == Message.MessageType.TEXT && previousContentForFile != null) {
+                previousContentForFile = encryptionService.encrypt(previousContentForFile);
             }
 
             Message copyForFile = new Message(
@@ -86,6 +92,7 @@ public class MessageRepository {
             copyForFile.setEdited(originalMsg.isEdited());
             copyForFile.setDeleted(originalMsg.isDeleted());
             copyForFile.setReported(originalMsg.isReported());
+            copyForFile.setPreviousContent(previousContentForFile);
 
             lines.add(gson.toJson(copyForFile));
         }
@@ -111,6 +118,17 @@ public class MessageRepository {
         List<Message> chatMessages = messagesByChatId.get(chatId);
         if (chatMessages == null) return new ArrayList<>();
         return new ArrayList<>(chatMessages);
+    }
+
+    //Returns messages of a chat that were edited and/or deleted (used by the per-chat history page)
+    public List<Message> findEditedOrDeleted(String chatId) {
+        List<Message> result = new ArrayList<>();
+        for (Message m : findByChatId(chatId)) {
+            if (m.isEdited() || m.isDeleted()) {
+                result.add(m);
+            }
+        }
+        return result;
     }
 
     public List<Message> findAllReported() {

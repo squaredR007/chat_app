@@ -182,6 +182,13 @@ public class MessageService {
         return messageRepository.findByChatId(chatId);
     }
 
+    //Returns edited/deleted messages of a chat, most recent first (used by the history page)
+    public List<Message> getEditedOrDeletedMessages(String chatId) {
+        List<Message> result = messageRepository.findEditedOrDeleted(chatId);
+        result.sort((a, b) -> b.getTimestamp().compareTo(a.getTimestamp()));
+        return result;
+    }
+
     //Getting all of the messages which were being reported
 
     public List<Message> getReportedMessages() {

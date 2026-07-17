@@ -1,0 +1,2 @@
+{"username":"Reyhaneh","password":"$2a$10$dJbOcjXiKwTUdm.q6Lb67.GlszxavvUfvBmso1NTBXmpa.AYBRLcC","number":"123456789","lockUntil":0,"failedLoginAttempts":0,"lastSeen":1784274979068,"darkMode":false,"contacts":[],"blockedUsers":[]}
+{"username":"Zeinab","password":"$2a$10$0e2oymm/k4Sj9VgBw61qxu0076h1.xFhM74N3/7MLGazgVXNvcFbG","number":"741236985","lockUntil":0,"failedLoginAttempts":0,"lastSeen":1784275017821,"darkMode":false,"contacts":[],"blockedUsers":[]}

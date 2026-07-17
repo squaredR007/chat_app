@@ -35,6 +35,8 @@ public class GroupController implements HttpHandler {
                 handleRemoveMember(exchange);
             } else if (path.equals("/api/group/info") && method.equals("GET")) {
                 handleGetGroupInfo(exchange);
+            } else if (path.equals("/api/group/update") && method.equals("POST")) {
+                handleUpdateGroupInfo(exchange);
             } else {
                 HttpUtils.sendError(exchange, 404, "Endpoint not found");
             }
@@ -100,8 +102,37 @@ public class GroupController implements HttpHandler {
         HttpUtils.sendResponse(exchange, 200, response);
     }
 
+    //Reads an optional JSON field, returning null if absent/blank instead of throwing
+
+    private String optionalString(JsonObject body, String field) {
+        if (!body.has(field) || body.get(field).isJsonNull()) {
+            return null;
+        }
+        String value = body.get(field).getAsString();
+        return (value == null || value.trim().isEmpty()) ? null : value;
+    }
+
+    //Updating a group's name/description/photo (admin only, enforced in GroupService)
+
+    private void handleUpdateGroupInfo(HttpExchange exchange) throws IOException {
+        JsonObject body = HttpUtils.readBody(exchange);
+        String groupId = requireString(body, "groupId");
+        String requestingUsername = requireString(body, "requestingUsername");
+        String groupName = optionalString(body, "groupName");
+        String description = optionalString(body, "description");
+        String groupPhotoPath = optionalString(body, "groupPhotoPath");
+
+        Group group = groupService.updateGroupInfo(groupId, requestingUsername, groupName, description, groupPhotoPath);
+
+        JsonObject response = new JsonObject();
+        response.addProperty("status", "group updated");
+        response.addProperty("groupName", group.getGroupName());
+        response.addProperty("description", group.getDescription());
+        response.addProperty("groupPhotoPath", group.getGroupPhotoPath());
+        HttpUtils.sendResponse(exchange, 200, response);
+    }
+
     //Returning groups data's
-    //Fixed item : there was a bug here in this method which was avoiding members count to be sent to front which is fixed now
 
     private void handleGetGroupInfo(HttpExchange exchange) throws IOException {
         String query = exchange.getRequestURI().getQuery();

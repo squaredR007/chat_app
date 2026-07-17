@@ -1,0 +1,4 @@
+{"user1Username":"Reyhaneh","user2Username":"Reyhaneh","chatId":"saved_Reyhaneh","messages":[],"isPinned":false,"isArchived":false,"lastReadTimestamps":{}}
+{"user1Username":"Zeinab","user2Username":"Zeinab","chatId":"saved_Zeinab","messages":[],"isPinned":false,"isArchived":false,"lastReadTimestamps":{}}
+{"user1Username":"Zeinab","user2Username":"Reyhaneh","chatId":"private_Reyhaneh_Zeinab","messages":[],"isPinned":false,"isArchived":false,"lastReadTimestamps":{"Zeinab":1784275025627,"Reyhaneh":1784276092173}}
+{"group":{"groupId":"group_1784275040418","groupName":"Test","membersUsernames":["Zeinab","Reyhaneh"],"adminUsername":"Zeinab"},"chatId":"gchat_1784275040418","messages":[],"isPinned":false,"isArchived":false,"lastReadTimestamps":{"Zeinab":1784275041386,"Reyhaneh":1784276058996}}

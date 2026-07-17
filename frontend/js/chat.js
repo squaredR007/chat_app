@@ -51,6 +51,9 @@ const searchToggleBtn = document.getElementById("searchToggleBtn");
 const messageSearchBar = document.getElementById("messageSearchBar");
 const messageSearchInput = document.getElementById("messageSearchInput");
 const closeSearchBtn = document.getElementById("closeSearchBtn");
+const historyBtn = document.getElementById("historyBtn");
+
+historyBtn.href = `history.html?chatId=${encodeURIComponent(chatId)}`;
 
 // ── State ──
 let allMessages = [];

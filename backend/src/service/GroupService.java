@@ -100,8 +100,38 @@ public class GroupService {
                 }
             }
 
+            groupRepository.save(group);}
+    }
+
+
+
+    public Group updateGroupInfo(String groupId, String requestingUsername, String newGroupName, String newDescription, String newGroupPhotoPath) {
+        Group group = groupRepository.findById(groupId);
+        if (group == null) {
+            throw new RuntimeException("Group not found");
+        }
+        if (requestingUsername == null || requestingUsername.trim().isEmpty()) {
+            throw new RuntimeException("Username is required");
+        }
+
+        synchronized (group) {
+            if (!requestingUsername.equals(group.getAdminUsername())) {
+                throw new RuntimeException("Only the group admin can edit group info");
+            }
+
+            if (newGroupName != null && !newGroupName.trim().isEmpty()) {
+                group.setGroupName(newGroupName.trim());
+            }
+            if (newDescription != null) {
+                group.setDescription(newDescription.trim());
+            }
+            if (newGroupPhotoPath != null && !newGroupPhotoPath.trim().isEmpty()) {
+                group.setGroupPhotoPath(newGroupPhotoPath.trim());
+            }
+
             groupRepository.save(group);
         }
+        return group;
     }
 
     //Returning the whole group (It's data's actually)
