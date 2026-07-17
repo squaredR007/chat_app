@@ -87,4 +87,18 @@ public class ChatService {
 
         chatRepository.save(chat);
     }
+
+    //A method for counting unseen messages
+
+    public void markAsRead(String chatId, String username) {
+        Chat chat = chatRepository.getByChatId(chatId);
+        if (chat == null) {
+            throw new RuntimeException("Chat not found");
+        }
+        if (username == null || username.trim().isEmpty()) {
+            throw new RuntimeException("Username is required");
+        }
+        chat.markAsRead(username);
+        chatRepository.save(chat);
+    }
 }

@@ -189,6 +189,39 @@ function renderChats(chats) {
     chats.forEach(chat => chatList.appendChild(createChatItem(chat)));
 }
 
+
+function getUnreadMessagesCount(chat) {
+    if (!chat.messages || chat.messages.length === 0) return 0;
+
+    if (chat.chatId === `saved_${currentUsername}`) return 0;
+
+    // lastReadTimestamp comes from the server (per-user, tracked via
+    // Chat.markAsRead / POST /api/chat/markRead, called from chat.js and
+    // group-chat.js whenever the user opens/refreshes a conversation).
+    const lastReadTime = chat.lastReadTimestamp || 0;
+
+    let unreadCount = 0;
+
+    chat.messages.forEach(msg => {
+        if (msg.senderUsername !== currentUsername && !msg.deleted) {
+            const msgTime = getMessageMillis(msg);
+
+            if (msgTime > lastReadTime) {
+                unreadCount++;
+            }
+        }
+    });
+
+    return unreadCount;
+}
+
+// تابع کمکی برای گرفتن میلی‌ثانیه یک پیام خاص
+function getMessageMillis(msg) {
+    if (!msg.timestamp || !Array.isArray(msg.timestamp)) return 0;
+    const [year, month, day, hour, minute, second] = msg.timestamp;
+    return new Date(year, month - 1, day, hour, minute, second || 0).getTime();
+}
+
 // Create chat item
 function createChatItem(chat) {
     const isSaved = chat.chatId === `saved_${currentUsername}`;
@@ -220,6 +253,11 @@ function createChatItem(chat) {
         ? `<span class="pin-icon">📌</span>`
         : "";
 
+        const unreadCount = getUnreadMessagesCount(chat);
+    const unreadBadge = unreadCount > 0 
+        ? `<span class="unread-badge" style="background-color: #e91e63; color: white; border-radius: 50%; padding: 2px 7px; font-size: 0.8rem; margin-left: 8px; font-weight: bold;">${unreadCount}</span>`
+        : "";
+
     const item = document.createElement("a");
 
     item.href = isGroup
@@ -234,7 +272,10 @@ function createChatItem(chat) {
         </div>
 
         <div class="chat-info">
-            <div class="chat-name">${escapeHtml(displayName || "")}</div>
+            <div class="chat-name" style="display: flex; align-items: center; justify-content: space-between;">
+                <span>${escapeHtml(displayName || "")}</span>
+                ${unreadBadge}
+            </div>
             <div class="chat-preview">${getLastMessagePreview(chat)}</div>
         </div>
 

@@ -55,6 +55,8 @@ public class ChatController implements HttpHandler {
                 handleUnpinChat(exchange);
             } else if (path.equals("/api/chat/unarchive") && method.equals("POST")) {
                 handleUnarchiveChat(exchange);
+            } else if (path.equals("/api/chat/markRead") && method.equals("POST")) {
+                handleMarkAsRead(exchange);
             } else {
                 HttpUtils.sendError(exchange, 404, "Endpoint not found");
             }
@@ -123,10 +125,15 @@ public class ChatController implements HttpHandler {
             chatJson.addProperty("pinned", chat.isPinned());
             chatJson.addProperty("archived", chat.isArchived());
 
-            // serialize messages
+            if (filterUsername != null) {
+                chatJson.addProperty("lastReadTimestamp", chat.getLastReadTimestamp(filterUsername));
+            }
+
+
             com.google.gson.JsonArray messagesArray = new com.google.gson.JsonArray();
-            if (chat.getMessages() != null) {
-                for (Message msg : chat.getMessages()) {
+            List<Message> chatMessages = messageService.getMessages(chat.getChatId());
+            if (chatMessages != null) {
+                for (Message msg : chatMessages) {
                     JsonObject msgJson = new JsonObject();
                     msgJson.addProperty("id", msg.getId());
                     msgJson.addProperty("senderUsername", msg.getSenderUsername());
@@ -134,6 +141,8 @@ public class ChatController implements HttpHandler {
                     msgJson.addProperty("type", msg.getType().toString());
                     msgJson.addProperty("deleted", msg.isDeleted());
                     msgJson.addProperty("edited", msg.isEdited());
+
+                    msgJson.add("timestamp", HttpUtils.getGson().toJsonTree(msg.getTimestamp()));
                     messagesArray.add(msgJson);
                 }
             }
@@ -330,6 +339,20 @@ public class ChatController implements HttpHandler {
 
         JsonObject response = new JsonObject();
         response.addProperty("status", "unarchived");
+        HttpUtils.sendResponse(exchange, 200, response);
+    }
+
+    //Marking a message as read message
+
+    private void handleMarkAsRead(HttpExchange exchange) throws IOException {
+        JsonObject body = HttpUtils.readBody(exchange);
+        String chatId = requireString(body, "chatId");
+        String username = requireString(body, "username");
+
+        chatService.markAsRead(chatId, username);
+
+        JsonObject response = new JsonObject();
+        response.addProperty("status", "marked as read");
         HttpUtils.sendResponse(exchange, 200, response);
     }
 }

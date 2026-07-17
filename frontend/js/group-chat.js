@@ -67,6 +67,18 @@ let deletingMessageId = null;
 let currentGroup = null; // the Group object for this chat
 const seenMessageIds = new Set();
 
+async function markChatAsRead() {
+    try {
+        await fetch(`${API_BASE}/chat/markRead`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chatId, username: currentUsername })
+        });
+    } catch (err) {
+        console.error("Failed to mark chat as read:", err);
+    }
+}
+
 // Load group info
 async function loadGroupInfo() {
     try {
@@ -144,6 +156,8 @@ async function loadMessages() {
         renderMessages(allMessages);
         scrollToBottom();
 
+        markChatAsRead() ;
+
         if (!pollInterval) {
             pollInterval = setInterval(pollNewMessages, POLL_INTERVAL);
         }
@@ -170,6 +184,8 @@ async function pollNewMessages() {
         allMessages = [...allMessages, ...trulyNew];
         renderMessages(allMessages);
         scrollToBottom();
+
+        markChatAsRead() ;
     } catch (err) {
         console.error("Poll failed:", err);
     }

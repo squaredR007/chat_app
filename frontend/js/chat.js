@@ -62,6 +62,20 @@ let otherUsername = null;
 // Track message IDs we already have to prevent duplicates
 const seenMessageIds = new Set();
 
+
+//tells the server this user has npw seen this chat
+async function markChatAsRead() {
+    try {
+        await fetch(`${API_BASE}/chat/markRead`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chatId, username: currentUsername })
+        });
+    } catch (err) {
+        console.error("Failed to mark chat as read:", err);
+    }
+}
+
 // ── Load chat info ──
 async function loadChatInfo() {
     try {
@@ -112,6 +126,8 @@ async function loadMessages() {
         renderMessages(allMessages);
         scrollToBottom();
 
+        markChatAsRead() ;
+
         // Start polling only AFTER initial load is complete
         if (!pollInterval) {
             pollInterval = setInterval(pollNewMessages, POLL_INTERVAL);
@@ -142,6 +158,8 @@ async function pollNewMessages() {
         allMessages = [...allMessages, ...trulyNew];
         renderMessages(allMessages);
         scrollToBottom();
+
+        markChatAsRead() ;
     } catch (err) {
         console.error("Poll failed:", err);
     }
