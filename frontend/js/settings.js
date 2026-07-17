@@ -1,4 +1,4 @@
-// at the top of settings.js
+
 const username = localStorage.getItem("username");
 const userId = localStorage.getItem("userId");
 const displayName = localStorage.getItem("displayName");
