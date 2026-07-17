@@ -115,6 +115,47 @@ function addMemberToList() {
     renderMemberChips();
 }
 
+// ── Block user ──
+document.getElementById("blockUserBtn").addEventListener("click", async () => {
+
+    const username = document.getElementById("privateChatUsername").value.trim();
+
+    if (!username) {
+        showFeedback(privateFeedback, "Enter a username first.", "error");
+        return;
+    }
+
+    if (username === currentUsername) {
+        showFeedback(privateFeedback, "You can't block yourself.", "error");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/auth/blockUser`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                ownerUsername: currentUsername,
+                blockedUsername: username
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showFeedback(privateFeedback, "User blocked successfully.", "success");
+        } else {
+            showFeedback(privateFeedback, "Couldn't block this user.", "error");
+        }
+
+    } catch (err) {
+        console.error(err);
+        showFeedback(privateFeedback, "Server error.", "error");
+    }
+});
+
 function renderMemberChips() {
     memberChips.innerHTML = "";
     groupMembers.forEach(username => {
