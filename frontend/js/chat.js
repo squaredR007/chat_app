@@ -1,3 +1,18 @@
+document.addEventListener("DOMContentLoaded", () => {
+    if (window.applyGlobalTheme) {
+        window.applyGlobalTheme();
+    }
+
+    if (window.applyGlobalBackground) {
+        window.applyGlobalBackground();
+    }
+});
+
+window.addEventListener("backgroundChanged", () => {
+    window.applyGlobalTheme?.();
+    window.applyGlobalBackground?.();
+});
+
 // ── Config ──
 const API_BASE = "http://localhost:8080/api";
 const POLL_INTERVAL = 3000;
@@ -44,8 +59,6 @@ let otherUsername = null;
 const seenMessageIds = new Set();
 
 // ── Load chat info ──
-// FIX: now passes ?username= so the server only returns chats this user is
-// actually part of (see ChatController), instead of the entire chat database.
 async function loadChatInfo() {
     try {
         const response = await fetch(`${API_BASE}/chat/list?username=${encodeURIComponent(currentUsername)}`);

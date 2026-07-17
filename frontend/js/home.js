@@ -1,8 +1,9 @@
 // Force fresh session check before anything else
 // Runs immediately before any other code to prevent stale data
-(function() {
+(function () {
     const username = localStorage.getItem("username");
     const userId = localStorage.getItem("userId");
+
     if (!username || !userId) {
         window.location.href = "../pages/login.html";
     }
@@ -11,40 +12,52 @@
 // Config
 const API_BASE = "http://localhost:8080/api";
 
-// Read logged-in user from localStorage (set by login page)
+// Read logged-in user from localStorage
 const currentUsername = localStorage.getItem("username");
 const currentUserId = localStorage.getItem("userId");
+
+// Apply saved theme & background
+document.addEventListener("DOMContentLoaded", () => {
+    window.applyGlobalTheme?.();
+    window.applyGlobalBackground?.();
+});
 
 // DOM References
 const chatList = document.getElementById("chatList");
 const searchInput = document.getElementById("searchInput");
 const currentUserAvatar = document.getElementById("currentUserAvatar");
-
-// Show current user's initial in the sidebar avatar
-currentUserAvatar.textContent = currentUsername ? currentUsername.charAt(0).toUpperCase() : "?";
-
-// Theme Toggle
 const themeToggle = document.getElementById("themeToggle");
 
-const savedTheme = localStorage.getItem("theme");
-if (savedTheme === "dark") {
-    document.body.classList.add("dark");
-    themeToggle.textContent = "☀️";
-}
+// Show current user's initial
+currentUserAvatar.textContent = currentUsername
+    ? currentUsername.charAt(0).toUpperCase()
+    : "?";
 
+// Initialize theme icon
+themeToggle.textContent =
+    localStorage.getItem("theme") === "dark" ? "☀️" : "🌙";
+
+// Theme Toggle
 themeToggle.addEventListener("click", () => {
-    const isDark = document.body.classList.toggle("dark");
-    themeToggle.textContent = isDark ? "☀️" : "🌙";
+    const isDark = localStorage.getItem("theme") !== "dark";
+
     localStorage.setItem("theme", isDark ? "dark" : "light");
 
-    if (window.applyGlobalBackground) {
-        window.applyGlobalBackground();
-    }
+    // Apply theme/background everywhere
+    window.applyGlobalTheme?.();
+    window.applyGlobalBackground?.();
 
+    // Update icon
+    themeToggle.textContent =
+        document.body.classList.contains("dark") ? "☀️" : "🌙";
+
+    // Save to backend
     if (currentUserId) {
         fetch(`${API_BASE}/settings/changeDarkMode`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json"
+            },
             body: JSON.stringify({
                 userId: currentUserId,
                 darkmode: isDark
@@ -53,16 +66,27 @@ themeToggle.addEventListener("click", () => {
     }
 });
 
+// Listen for changes from other pages/tabs
+window.addEventListener("storage", (e) => {
+    if (e.key === "theme" || e.key === "background") {
+        window.applyGlobalTheme?.();
+        window.applyGlobalBackground?.();
+
+        themeToggle.textContent =
+            document.body.classList.contains("dark") ? "☀️" : "🌙";
+    }
+});
+
 // State
 let allChats = [];
-
 let showingArchived = false;
 
-// Fetch all chats from backend
-
+// Fetch chats
 async function loadChats() {
     try {
-        const response = await fetch(`${API_BASE}/chat/list?username=${encodeURIComponent(currentUsername)}`);
+        const response = await fetch(
+            `${API_BASE}/chat/list?username=${encodeURIComponent(currentUsername)}`
+        );
 
         if (!response.ok) {
             throw new Error(`Server returned ${response.status}`);
@@ -73,13 +97,17 @@ async function loadChats() {
 
         renderCurrentView();
     } catch (error) {
-        chatList.innerHTML = `<div class="empty-state">Could not connect to server.<br>Make sure the server is running.</div>`;
+        chatList.innerHTML = `
+            <div class="empty-state">
+                Could not connect to server.<br>
+                Make sure the server is running.
+            </div>
+        `;
         console.error("Failed to load chats:", error);
     }
 }
 
-// Picks the right list (recent vs. archived), sorts it, and renders it.
-
+// Picks the right list (recent vs. archived)
 function renderCurrentView() {
     let visibleChats = allChats.filter(chat =>
         showingArchived ? chat.archived : !chat.archived
@@ -96,14 +124,26 @@ function renderCurrentView() {
 
 function getLastMessageMillis(chat) {
     const messages = chat.messages;
+
     if (!messages || messages.length === 0) return 0;
+
     const last = messages[messages.length - 1];
+
     if (!last.timestamp || !Array.isArray(last.timestamp)) return 0;
+
     const [year, month, day, hour, minute, second] = last.timestamp;
-    return new Date(year, month - 1, day, hour, minute, second || 0).getTime();
+
+    return new Date(
+        year,
+        month - 1,
+        day,
+        hour,
+        minute,
+        second || 0
+    ).getTime();
 }
 
-// Render the chat list
+// Render chats
 function renderChats(chats) {
     chatList.innerHTML = "";
 
@@ -111,23 +151,29 @@ function renderChats(chats) {
         const backRow = document.createElement("a");
         backRow.href = "#";
         backRow.className = "archive-row";
-        backRow.innerHTML = `<span class="archive-icon">←</span><span>Back to chats</span>`;
-        backRow.addEventListener("click", (e) => {
+        backRow.innerHTML =
+            `<span class="archive-icon">←</span><span>Back to chats</span>`;
+
+        backRow.addEventListener("click", e => {
             e.preventDefault();
             showingArchived = false;
             renderCurrentView();
         });
+
         chatList.appendChild(backRow);
     } else {
         const archiveRow = document.createElement("a");
         archiveRow.href = "#";
         archiveRow.className = "archive-row";
-        archiveRow.innerHTML = `<span class="archive-icon">🗂️</span><span>Archived Chats</span>`;
-        archiveRow.addEventListener("click", (e) => {
+        archiveRow.innerHTML =
+            `<span class="archive-icon">🗂️</span><span>Archived Chats</span>`;
+
+        archiveRow.addEventListener("click", e => {
             e.preventDefault();
             showingArchived = true;
             renderCurrentView();
         });
+
         chatList.appendChild(archiveRow);
     }
 
@@ -137,55 +183,63 @@ function renderChats(chats) {
         empty.innerHTML = showingArchived
             ? "No archived chats."
             : "No conversations yet.<br>Start a new one!";
+
         chatList.appendChild(empty);
         return;
     }
 
-    chats.forEach(chat => {
-        const item = createChatItem(chat);
-        chatList.appendChild(item);
-    });
+    chats.forEach(chat => chatList.appendChild(createChatItem(chat)));
 }
 
-// Create a single chat list item
+// Create chat item
 function createChatItem(chat) {
     const isSaved = chat.chatId === `saved_${currentUsername}`;
     const isGroup = chat.group != null;
 
     let displayName;
+
     if (isSaved) {
         displayName = "Saved Messages";
     } else if (isGroup) {
         displayName = chat.group.groupName || "Unknown Group";
     } else {
-        displayName = chat.user1Username === currentUsername
-            ? chat.user2Username
-            : chat.user1Username;
+        displayName =
+            chat.user1Username === currentUsername
+                ? chat.user2Username
+                : chat.user1Username;
     }
 
-    const avatarLetter = displayName ? displayName.charAt(0).toUpperCase() : "?";
+    const avatarLetter = displayName
+        ? displayName.charAt(0).toUpperCase()
+        : "?";
 
     let avatarClass = "chat-avatar";
+
     if (isSaved) avatarClass += " saved";
     else if (isGroup) avatarClass += " group";
 
-    const pinIcon = chat.pinned ? `<span class="pin-icon">📌</span>` : "";
+    const pinIcon = chat.pinned
+        ? `<span class="pin-icon">📌</span>`
+        : "";
 
     const item = document.createElement("a");
 
-    if (isGroup) {
-        item.href = `group-chat.html?chatId=${encodeURIComponent(chat.chatId)}`;
-    } else {
-        item.href = `chat.html?chatId=${encodeURIComponent(chat.chatId)}`;
-    }
+    item.href = isGroup
+        ? `group-chat.html?chatId=${encodeURIComponent(chat.chatId)}`
+        : `chat.html?chatId=${encodeURIComponent(chat.chatId)}`;
 
     item.className = `chat-item${chat.pinned ? " pinned" : ""}`;
+
     item.innerHTML = `
-        <div class="${avatarClass}">${isSaved ? "⭐" : avatarLetter}</div>
+        <div class="${avatarClass}">
+            ${isSaved ? "⭐" : avatarLetter}
+        </div>
+
         <div class="chat-info">
             <div class="chat-name">${escapeHtml(displayName || "")}</div>
             <div class="chat-preview">${getLastMessagePreview(chat)}</div>
         </div>
+
         <div class="chat-meta">
             <span class="chat-time">${getLastMessageTime(chat)}</span>
             ${pinIcon}
@@ -195,39 +249,58 @@ function createChatItem(chat) {
     return item;
 }
 
-// ── Get last message preview text ──
 function getLastMessagePreview(chat) {
     const messages = chat.messages;
-    if (!messages || messages.length === 0) return "No messages yet";
+
+    if (!messages || messages.length === 0)
+        return "No messages yet";
+
     const last = messages[messages.length - 1];
+
     if (last.deleted) return "🚫 Message deleted";
     if (last.type === "MEDIA") return "📎 Media";
-    return last.content ? escapeHtml(last.content.substring(0, 40)) : "";
+
+    return last.content
+        ? escapeHtml(last.content.substring(0, 40))
+        : "";
 }
 
-// Get last message time
 function getLastMessageTime(chat) {
     const messages = chat.messages;
+
     if (!messages || messages.length === 0) return "";
+
     const last = messages[messages.length - 1];
-    if (!last.timestamp || !Array.isArray(last.timestamp)) return "";
+
+    if (!last.timestamp || !Array.isArray(last.timestamp))
+        return "";
+
     const [year, month, day, hour, minute] = last.timestamp;
-    const date = new Date(year, month - 1, day, hour, minute);
-    return formatTime(date);
+
+    return formatTime(
+        new Date(year, month - 1, day, hour, minute)
+    );
 }
 
-// Format time
 function formatTime(date) {
     const now = new Date();
-    const isToday = date.toDateString() === now.toDateString();
-    if (isToday) {
-        return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+    if (date.toDateString() === now.toDateString()) {
+        return date.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit"
+        });
     }
-    return date.toLocaleDateString([], { month: "short", day: "numeric" });
+
+    return date.toLocaleDateString([], {
+        month: "short",
+        day: "numeric"
+    });
 }
 
 function escapeHtml(text) {
     if (!text) return "";
+
     return text
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -235,27 +308,41 @@ function escapeHtml(text) {
         .replace(/"/g, "&quot;");
 }
 
-// Search filtering
+// Search
 searchInput.addEventListener("input", () => {
     const query = searchInput.value.trim().toLowerCase();
-    const base = allChats.filter(chat => showingArchived ? chat.archived : !chat.archived);
+
+    const base = allChats.filter(chat =>
+        showingArchived ? chat.archived : !chat.archived
+    );
 
     if (!query) {
         renderChats(base);
         return;
     }
-    const filtered = base.filter(chat => getDisplayName(chat).toLowerCase().includes(query));
-    renderChats(filtered);
+
+    renderChats(
+        base.filter(chat =>
+            getDisplayName(chat)
+                .toLowerCase()
+                .includes(query)
+        )
+    );
 });
 
-// Helper to get display name
 function getDisplayName(chat) {
-    if (chat.chatId && chat.chatId.startsWith("saved_")) return "Saved Messages";
-    if (chat.group) return chat.group.groupName || "";
-    return chat.user1Username === currentUsername ? chat.user2Username : chat.user1Username;
+    if (chat.chatId?.startsWith("saved_"))
+        return "Saved Messages";
+
+    if (chat.group)
+        return chat.group.groupName || "";
+
+    return chat.user1Username === currentUsername
+        ? chat.user2Username
+        : chat.user1Username;
 }
 
-// Poll for new chats every 3 seconds
+// Poll
 setInterval(loadChats, 3000);
 
 // Initial load

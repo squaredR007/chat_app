@@ -7,16 +7,22 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #fff0f5;
+    background-color: #fff0f5;
     color: #4a2035;
     height: 100vh;
     overflow: hidden;
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
 }
 
 /* ── App Layout ── */
 .app-container {
     display: flex;
     height: 100vh;
+    background: transparent;
 }
 
 /* ── Sidebar ── */
@@ -285,7 +291,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #fff0f5;
+    background: transparent;
 }
 
 .welcome {
@@ -410,7 +416,7 @@ body.dark .chat-time {
 }
 
 body.dark .main-area {
-    background: #2d1a24;
+    background: transparent;
 }
 
 body.dark .archive-row {
