@@ -36,15 +36,15 @@ const options = document.querySelectorAll(".background-option");
 
 async function saveTheme(isDark){
 
-    const userId = localStorage.getItem("userId");
-    if(!userId) return;
+    const username = localStorage.getItem("username");
+    if(!username) return;
 
     try{
         await fetch("http://localhost:8080/api/settings/changeDarkMode",
             {
                 method:"POST",
                 headers:{"Content-Type":"application/json"},
-                body:JSON.stringify({userId, darkmode:isDark})
+                body:JSON.stringify({username, darkmode:isDark})
             }
         );
     }
@@ -54,14 +54,14 @@ async function saveTheme(isDark){
 }
 
 async function saveBackground(background) {
-    const userId = localStorage.getItem("userId");
-    if (!userId) return;
+    const username = localStorage.getItem("username");
+    if (!username) return;
 
     try {
         await fetch("http://localhost:8080/api/settings/changeBackground", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId, background })
+            body: JSON.stringify({ username, background })
         });
     } catch (err) {
         console.error(err);

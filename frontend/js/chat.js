@@ -19,9 +19,8 @@ const POLL_INTERVAL = 3000;
 
 // ── Read logged-in user from localStorage ──
 const currentUsername = localStorage.getItem("username");
-const currentUserId = localStorage.getItem("userId");
 
-if (!currentUsername || !currentUserId) {
+if (!currentUsername) {
     window.location.href = "login.html";
 }
 

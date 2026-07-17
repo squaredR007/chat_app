@@ -34,14 +34,14 @@ async function toggleEdit() {
 
 async function changeUsername() {
 
-    const userId = localStorage.getItem("userId");
+    const oldUsername = localStorage.getItem("username");
 
-    if (!userId) {
+    if (!oldUsername) {
         window.location.href = "../pages/login.html";
         return;
     }
 
-    const username = document.getElementById("input-username").value;
+    const newUsername = document.getElementById("input-username").value;
 
     try {
 
@@ -51,8 +51,8 @@ async function changeUsername() {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                userId,
-                username
+                oldUsername,
+                newUsername
             })
         });
 
@@ -60,7 +60,8 @@ async function changeUsername() {
 
         alert(data.success ? "Username updated" : "Failed to update username");
         if(data.success){
-            document.getElementById("text-username").innerText = username;
+            document.getElementById("text-username").innerText = newUsername;
+            localStorage.setItem("username", newUsername);
         }
 
     } catch (err) {
@@ -73,7 +74,7 @@ async function changeUsername() {
 
 async function changeNumber() {
 
-    const userId = localStorage.getItem("userId");
+    const username = localStorage.getItem("username");
     const number = document.getElementById("input-number").value;
 
     try {
@@ -84,7 +85,7 @@ async function changeNumber() {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                userId,
+                username,
                 number
             })
         });
@@ -106,7 +107,7 @@ async function changeNumber() {
 
 async function deleteAccount() {
 
-    const userId = localStorage.getItem("userId");
+    const username = localStorage.getItem("username");
 
     try {
 
@@ -116,7 +117,7 @@ async function deleteAccount() {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                userId
+                username
             })
         });
 
@@ -146,16 +147,16 @@ async function deleteAccount() {
 
 async function loadUserInfo() {
 
-    const userId = localStorage.getItem("userId");
+    const username = localStorage.getItem("username");
 
-    if (!userId) {
+    if (!username) {
         window.location.href = "../pages/login.html";
         return;
     }
 
     try {
 
-        const response = await fetch(`http://localhost:8080/api/user/info?userId=${userId}`);
+        const response = await fetch(`http://localhost:8080/api/user/info?username=${username}`);
 
         const data = await response.json();
 
@@ -177,7 +178,7 @@ async function loadUserInfo() {
 
 async function changePassword() {
 
-    const userId = localStorage.getItem("userId");
+    const username = localStorage.getItem("username");
     const password = document.getElementById("input-password").value;
 
     if (!password) {
@@ -190,7 +191,7 @@ async function changePassword() {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
-                userId,
+                username,
                 password
             })
         });

@@ -2,9 +2,8 @@
 // Runs immediately before any other code to prevent stale data
 (function () {
     const username = localStorage.getItem("username");
-    const userId = localStorage.getItem("userId");
 
-    if (!username || !userId) {
+    if (!username) {
         window.location.href = "../pages/login.html";
     }
 })();
@@ -14,7 +13,6 @@ const API_BASE = "http://localhost:8080/api";
 
 // Read logged-in user from localStorage
 const currentUsername = localStorage.getItem("username");
-const currentUserId = localStorage.getItem("userId");
 
 // Apply saved theme & background
 document.addEventListener("DOMContentLoaded", () => {
@@ -52,14 +50,14 @@ themeToggle.addEventListener("click", () => {
         document.body.classList.contains("dark") ? "☀️" : "🌙";
 
     // Save to backend
-    if (currentUserId) {
+    if (currentUsername) {
         fetch(`${API_BASE}/settings/changeDarkMode`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                userId: currentUserId,
+                username: currentUsername,
                 darkmode: isDark
             })
         }).catch(err => console.error("Failed to save theme:", err));

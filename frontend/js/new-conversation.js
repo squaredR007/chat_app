@@ -3,9 +3,8 @@ const API_BASE = "http://localhost:8080/api";
 
 // Read logged-in user from localStorage
 const currentUsername = localStorage.getItem("username");
-const currentUserId = localStorage.getItem("userId");
 
-if (!currentUsername || !currentUserId) {
+if (!currentUsername) {
     window.location.href = "../pages/login.html";
 }
 

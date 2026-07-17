@@ -35,7 +35,6 @@ form?.addEventListener("submit", async (e) => {
             localStorage.clear() ;
 
             localStorage.setItem("username", username);
-            localStorage.setItem("userId", data.userId);
             localStorage.setItem("displayName" , data.displayName) ;
 
             alert("Login successful");

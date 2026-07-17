@@ -9,14 +9,14 @@ let editing = false;
 let pendingProfileImage = null;
 
 async function loadProfileSettings() {
-    const userId = localStorage.getItem("userId");
-    if (!userId) {
+    const username = localStorage.getItem("username");
+    if (!username) {
         alert("Please login again.");
         return;
     }
 
     try {
-        const response = await fetch(`http://localhost:8080/api/user/info?userId=${userId}`);
+        const response = await fetch(`http://localhost:8080/api/user/info?username=${username}`);
         const user = await response.json();
 
         document.getElementById("text-displayname").textContent = user.displayName || user.username;
@@ -91,14 +91,14 @@ async function toggleEdit() {
 }
 
 async function changeDisplayName() {
-    const userId = localStorage.getItem("userId");
+    const username = localStorage.getItem("username");
     const newName = document.getElementById("input-displayname").value;
 
     try {
         const response = await fetch("http://localhost:8080/api/settings/changeDisplayName", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({userId, newName})
+            body: JSON.stringify({username, newName})
         });
 
         const data = await response.json();
@@ -111,7 +111,7 @@ async function changeDisplayName() {
 }
 
 async function changeBiography() {
-    const userId = localStorage.getItem("userId");
+    const username = localStorage.getItem("username");
     const biography = document.getElementById("input-biography").value;
 
     try {
@@ -120,7 +120,7 @@ async function changeBiography() {
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({userId, biography})
+            body: JSON.stringify({username, biography})
         });
 
         const data = await response.json();
@@ -136,13 +136,13 @@ async function changeProfileImage() {
 
     if (!pendingProfileImage) return true;
 
-    const userId = localStorage.getItem("userId");
+    const username = localStorage.getItem("username");
 
     try {
         const response = await fetch("http://localhost:8080/api/settings/changeProfileImage", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({userId, profileImage: pendingProfileImage})
+            body: JSON.stringify({username, profileImage: pendingProfileImage})
         });
 
         const data = await response.json();

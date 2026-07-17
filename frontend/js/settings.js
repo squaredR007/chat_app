@@ -1,6 +1,5 @@
 // at the top of settings.js
 const username = localStorage.getItem("username");
-const userId = localStorage.getItem("userId");
 const displayName = localStorage.getItem("displayName");
 
 // then set the fields
@@ -19,7 +18,6 @@ document.addEventListener("DOMContentLoaded", () => {
 function logout() {
     // clear ALL user data from localStorage
     localStorage.removeItem("username");
-    localStorage.removeItem("userId");
     localStorage.removeItem("displayName");
 
     // redirect to login

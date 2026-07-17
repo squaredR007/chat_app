@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", async () => {
 
     const username = localStorage.getItem("username");
-    const userId = localStorage.getItem("userId");
 
     // Set username fields from localStorage
     const displayNameEl = document.querySelector(".display-name");
@@ -11,9 +10,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (usernameEl) usernameEl.textContent = username ? `@${username}` : "";
 
     // Load full user info from backend
-    if (userId) {
+    if (username) {
         try {
-            const response = await fetch(`http://localhost:8080/api/user/info?userId=${userId}`);
+            const response = await fetch(`http://localhost:8080/api/user/info?username=${username}`);
             const user = await response.json();
 
             // Fill in bio
