@@ -104,13 +104,29 @@ public class AuthService {
         return true;
     }
 
-
     //check the password pattern
     private boolean patternPassword(String password){
         String regex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[*&^%$#@!])[A-Za-z\\d*&^%$#@!]{8,}$";
 
         if (!Pattern.matches(regex, password))
             return false;
+        return true;
+    }
+
+    //handle block contact
+    public boolean blockUser(String ownerUsername, String blockedUsername){
+
+        User owner = userRepository.getByUsername(ownerUsername);
+        User blocked = userRepository.getByUsername(blockedUsername);
+
+        if(owner == null || blocked == null){
+            return false;
+        }
+
+        owner.blockUser(blockedUsername);
+        owner.removeContact(blockedUsername);
+        userRepository.save();
+
         return true;
     }
 }
