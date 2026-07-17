@@ -62,7 +62,7 @@ public class UserController implements HttpHandler {
         String userId = requireString(body , "userId");
         String targetUserId = requireString(body ,"targetUserId");
 
-        User user = userRepository.getByUserId(userId);
+        User user = userRepository.getByUsername(userId);
         if (user == null) throw new RuntimeException("User not found");
         user.blockUser(targetUserId);
 
@@ -74,12 +74,12 @@ public class UserController implements HttpHandler {
     // unblocks a user
     private void handleUnblockUser(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
-        String userId = requireString(body , "userId");
-        String targetUserId = requireString(body , "targetUserId");
+        String username = requireString(body , "username");
+        String targetUsername = requireString(body , "targetUsername");
 
-        User user = userRepository.getByUserId(userId);
+        User user = userRepository.getByUsername(username);
         if (user == null) throw new RuntimeException("User not found");
-        user.unblockUser(targetUserId);
+        user.unblockUser(targetUsername);
 
         JsonObject response = new JsonObject();
         response.addProperty("success", true);
@@ -89,12 +89,12 @@ public class UserController implements HttpHandler {
     // adds a contact
     private void handleAddContact(HttpExchange exchange) throws IOException {
         JsonObject body = HttpUtils.readBody(exchange);
-        String userId = requireString(body , "userId");
-        String contactUserId = requireString(body , "contactUserId");
+        String username = requireString(body , "username");
+        String contactUsername = requireString(body , "contactUsername");
 
-        User user = userRepository.getByUserId(userId);
+        User user = userRepository.getByUsername(username);
         if (user == null) throw new RuntimeException("User not found");
-        user.addContact(contactUserId);
+        user.addContact(contactUsername);
 
         JsonObject response = new JsonObject();
         response.addProperty("success", true);
@@ -105,13 +105,13 @@ public class UserController implements HttpHandler {
     private void handleGetUserInfo(HttpExchange exchange) throws IOException {
         String query = exchange.getRequestURI().getQuery();
         JsonObject params = HttpUtils.parseQueryString(query);
-        if (!params.has("userId") || params.get("userId").getAsString().isEmpty()) {
-            HttpUtils.sendError(exchange , 400 , "Missing required query parameter: userId");
+        if (!params.has("username") || params.get("username").getAsString().isEmpty()) {
+            HttpUtils.sendError(exchange , 400 , "Missing required query parameter: username");
             return;
         }
-        String userId = params.get("userId").getAsString();
+        String username = params.get("username").getAsString();
 
-        User user = userRepository.getByUserId(userId);
+        User user = userRepository.getByUsername(username);
         if (user == null) {
             HttpUtils.sendError(exchange, 404, "User not found");
             return;

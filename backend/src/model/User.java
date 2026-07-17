@@ -11,8 +11,6 @@ public class User {
     private String password;
     private String number;
 
-    // unique id
-    private final String userId;
 
     // security
     private long lockUntil;
@@ -36,8 +34,6 @@ public class User {
         this.username = builder.username;
         this.password = builder.password;
         this.number = builder.number;
-
-        this.userId = (builder.userId != null) ? builder.userId : UUID.randomUUID().toString();
 
         this.lockUntil = builder.lockUntil;
         this.failedLoginAttempts=builder.failedLoginAttempts;
@@ -69,25 +65,25 @@ public class User {
 
 
     // social methods
-    public void addContact(String userId) {
-        if (!contacts.contains(userId) && !this.userId.equals(userId)) {
-            contacts.add(userId);
+    public void addContact(String username) {
+        if (!contacts.contains(username) && !this.username.equals(username)) {
+            contacts.add(username);
         }
     }
 
-    public void removeContact(String userId) {
-        if (contacts.contains(userId))
-            contacts.remove(userId);
+    public void removeContact(String username) {
+        if (contacts.contains(username))
+            contacts.remove(username);
     }
 
-    public void blockUser(String userId) {
-        if (!blockedUsers.contains(userId))
-            blockedUsers.add(userId);
+    public void blockUser(String username) {
+        if (!blockedUsers.contains(username))
+            blockedUsers.add(username);
     }
 
-    public void unblockUser(String userId) {
-        if (blockedUsers.contains(userId))
-            blockedUsers.remove(userId);
+    public void unblockUser(String username) {
+        if (blockedUsers.contains(username))
+            blockedUsers.remove(username);
     }
 
     // getters
@@ -101,10 +97,6 @@ public class User {
 
     public String getNumber() {
         return number;
-    }
-
-    public String getUserId() {
-        return userId;
     }
 
     public long getLockUntil() {
@@ -194,7 +186,6 @@ public class User {
         private String password;
         private String number;
 
-        private String userId;
 
         private long lockUntil = 0;
         private int failedLoginAttempts=0;
@@ -220,11 +211,6 @@ public class User {
 
         public Builder number(String number) {
             this.number = number;
-            return this;
-        }
-
-        public Builder userId(String userId) {
-            this.userId = userId;
             return this;
         }
 
