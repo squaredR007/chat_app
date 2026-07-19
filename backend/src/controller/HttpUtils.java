@@ -1,0 +1,127 @@
+package controller;
+import com.google.gson.Gson ;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject ;
+import com.sun.net.httpserver.HttpExchange ;
+import java.io.IOException ;
+import java.io.OutputStream ;
+import java.io.BufferedReader ;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets ;
+
+
+public class HttpUtils {
+
+    //Avoiding conflicts between Gson and java localDateTime library
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(java.time.LocalDateTime.class, new com.google.gson.TypeAdapter<java.time.LocalDateTime>() {
+                @Override
+                public void write(com.google.gson.stream.JsonWriter out, java.time.LocalDateTime value) throws java.io.IOException {
+                    if (value == null) {
+                        out.nullValue();
+                    } else {
+                        // serialize as array [year, month, day, hour, minute, second, nano]
+                        out.beginArray();
+                        out.value(value.getYear());
+                        out.value(value.getMonthValue());
+                        out.value(value.getDayOfMonth());
+                        out.value(value.getHour());
+                        out.value(value.getMinute());
+                        out.value(value.getSecond());
+                        out.value(value.getNano());
+                        out.endArray();
+                    }
+                }
+
+                @Override
+                public java.time.LocalDateTime read(com.google.gson.stream.JsonReader in) throws java.io.IOException {
+                    in.skipValue();
+                    return null;
+                }
+            })
+            .create();
+
+    public static Gson getGson() {
+        return gson;
+    }
+
+    //Reads the full request body and parses it into a JsonObject
+
+    public static JsonObject readBody(HttpExchange exchange) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8));
+        StringBuilder body = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            body.append(line);
+        }
+        String jsonString = body.toString().trim();
+        if (jsonString.isEmpty())
+            return new JsonObject();
+        return gson.fromJson(jsonString, JsonObject.class);
+    }
+
+    //Parsing the string into JSON Object to make it easy to read
+
+    public static JsonObject parseQueryString(String query) {
+        JsonObject jsonObject = new JsonObject();
+        if (query == null || query.isEmpty())
+            return jsonObject;
+        for (String pair : query.split("&")) {
+            String[] parts = pair.split("=");
+            if (parts.length == 2)
+                jsonObject.addProperty(parts[0], parts[1]);
+            else if (parts.length == 1)
+                jsonObject.addProperty(parts[0], "");
+        }
+        return jsonObject;
+    }
+
+    //Sending response
+
+    public static void sendResponse(HttpExchange exchange, int statusCode, Object data) throws IOException {
+        String responseBody = gson.toJson(data);
+        byte[] bytes = responseBody.getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type");
+        exchange.sendResponseHeaders(statusCode, bytes.length);
+        OutputStream os = exchange.getResponseBody();
+        os.write(bytes);
+        os.close();
+    }
+
+    // NEW: sends raw bytes back with a given Content-Type instead of wrapping
+    // them in JSON.
+    public static void sendFile(HttpExchange exchange, byte[] fileBytes, String contentType) throws IOException {
+        exchange.getResponseHeaders().set("Content-Type", contentType != null ? contentType : "application/octet-stream");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type");
+        // Let the browser cache uploaded media, since each file gets its own
+        // unique, never-reused UUID-based name (safe to cache "forever")
+        exchange.getResponseHeaders().set("Cache-Control", "public, max-age=31536000, immutable");
+        exchange.sendResponseHeaders(200, fileBytes.length);
+        OutputStream os = exchange.getResponseBody();
+        os.write(fileBytes);
+        os.close();
+    }
+
+    //Handling CORS
+
+    public static void handleCors(HttpExchange exchange) throws IOException {
+        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type");
+        exchange.sendResponseHeaders(204, -1);
+        exchange.close();
+    }
+
+    //Sending error
+
+    public static void sendError(HttpExchange exchange, int statusCode, String message) throws IOException {
+        JsonObject error = new JsonObject();
+        error.addProperty("error", message);
+        sendResponse(exchange, statusCode, error);
+    }
+}

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatApp — Home</title>
+    <link rel="stylesheet" href="../css/home.css">
+    <!-- reloading fresh -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- left sidebar -->
+    <aside class="sidebar">
+
+        <!-- Current user avatar + settings button -->
+        <div class="sidebar-header">
+            <a href="../pages/profile.html">
+                <div class="avatar" id="currentUserAvatar">?</div>
+            </a>
+            <span class="app-title">ChatApp</span>
+            <button class="icon-btn" id="themeToggle" title="Toggle theme">🌙</button>
+            <a href="../pages/settings.html" class="icon-btn" title="Settings">⚙️</a>
+        </div>
+
+        <!-- Search bar -->
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search conversations..." />
+        </div>
+
+        <!-- Chat list -->
+        <div class="chat-list" id="chatList">
+            <div class="loading">Loading chats...</div>
+        </div>
+
+        <!-- New conversation button -->
+        <a href="../pages/new-conversation.html" class="new-chat-btn" title="New Conversation">＋</a>
+
+    </aside>
+
+    <!-- main area (shown when no chat is selected) -->
+    <main class="main-area">
+        <div class="welcome">
+            <div class="welcome-icon">💬</div>
+            <h2>Welcome to ChatApp</h2>
+            <p>Select a conversation to start chatting</p>
+        </div>
+    </main>
+
+</div>
+
+<script src="../js/theme.js"></script>
+<script src="../js/home.js"></script>
+</body>
+</html>

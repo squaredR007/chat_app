@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatApp — Group Chat</title>
+    <link rel="stylesheet" href="../css/group-chat.css">
+</head>
+<body>
+
+<div class="chat-wrapper">
+
+    <!-- main chat area -->
+    <div class="chat-container" id="chatContainer">
+
+        <!-- header -->
+        <header class="chat-header">
+            <a href="../pages/home.html" class="back-btn">&#8592;</a>
+
+            <!-- Clicking group name/avatar opens info panel -->
+            <div class="header-info" id="headerInfo">
+                <div class="header-avatar" id="headerAvatar">G</div>
+                <div class="header-text">
+                    <div class="header-name" id="headerName">Loading...</div>
+                    <div class="header-status" id="headerStatus">...</div>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <button class="icon-btn" id="searchToggleBtn" title="Search messages">🔍</button>
+                <a class="icon-btn" id="historyBtn" title="Edited/deleted message history">🕘</a>
+                <button class="icon-btn" id="infoToggleBtn" title="Group info">ℹ️</button>
+            </div>
+        </header>
+
+        <!-- message search bar -->
+        <div class="message-search-bar" id="messageSearchBar" style="display:none;">
+            <input type="text" id="messageSearchInput" placeholder="Search in messages..." />
+            <button id="closeSearchBtn">✕</button>
+        </div>
+
+        <!-- message area -->
+        <div class="messages-area" id="messagesArea">
+            <div class="loading">Loading messages...</div>
+        </div>
+
+        <!-- input area -->
+        <div class="input-area">
+            <label class="attach-btn" title="Attach file">
+                📎
+                <input type="file" id="fileInput" style="display:none;" />
+            </label>
+            <input
+                    type="text"
+                    id="messageInput"
+                    placeholder="Message the group..."
+                    autocomplete="off"
+            />
+            <button class="send-btn" id="sendBtn">&#10148;</button>
+        </div>
+
+    </div>
+
+    <!-- group info panel -->
+    <div class="info-panel" id="infoPanel">
+
+        <div class="info-panel-header">
+            <h2>Group Info</h2>
+            <button class="icon-btn" id="closePanelBtn">✕</button>
+        </div>
+
+        <!-- group avatar and name -->
+        <div class="info-group-hero">
+            <div class="info-group-avatar" id="infoGroupAvatar">G</div>
+            <div class="info-group-name" id="infoGroupName">Group Name</div>
+            <div class="info-group-id" id="infoGroupId"></div>
+        </div>
+
+        <!-- Member count -->
+        <div class="info-section-title" id="memberCountLabel">Members</div>
+
+        <!-- Member list -->
+        <div class="member-list" id="memberList">
+        </div>
+
+        <!-- Add member (only visible if current user is admin) -->
+        <div class="add-member-section" id="addMemberSection" style="display:none;">
+            <input type="text" id="addMemberInput" placeholder="Enter username to add..." />
+            <button class="pink-btn" id="addMemberBtn">Add</button>
+        </div>
+
+        <!-- Actions -->
+        <div class="info-actions">
+            <button class="info-action-btn" id="editGroupBtn" style="display:none;">✏️ Edit Group Info</button>
+            <button class="info-action-btn leave" id="leaveGroupBtn">🚪 Leave Group</button>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- edit message -->
+<div class="dialog-overlay" id="editDialog" style="display:none;">
+    <div class="dialog">
+        <h3>Edit Message</h3>
+        <textarea id="editInput" rows="3"></textarea>
+        <div class="dialog-actions">
+            <button class="dialog-btn cancel" id="editCancelBtn">Cancel</button>
+            <button class="dialog-btn confirm" id="editConfirmBtn">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- delete message -->
+<div class="dialog-overlay" id="deleteDialog" style="display:none;">
+    <div class="dialog">
+        <h3>Delete Message</h3>
+        <p>Are you sure? This message will still appear in the group history.</p>
+        <div class="dialog-actions">
+            <button class="dialog-btn cancel" id="deleteCancelBtn">Cancel</button>
+            <button class="dialog-btn confirm danger" id="deleteConfirmBtn">Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- leave group -->
+<div class="dialog-overlay" id="leaveDialog" style="display:none;">
+    <div class="dialog">
+        <h3>Leave Group</h3>
+        <p>Are you sure you want to leave this group?</p>
+        <div class="dialog-actions">
+            <button class="dialog-btn cancel" id="leaveCancelBtn">Cancel</button>
+            <button class="dialog-btn confirm danger" id="leaveConfirmBtn">Leave</button>
+        </div>
+    </div>
+</div>
+
+<!-- edit group info -->
+<div class="dialog-overlay" id="editGroupDialog" style="display:none;">
+    <div class="dialog">
+        <h3>Edit Group Info</h3>
+        <input type="text" id="editGroupNameInput" placeholder="Group name" />
+        <textarea id="editGroupDescInput" rows="3" placeholder="Group description"></textarea>
+        <div class="dialog-actions">
+            <button class="dialog-btn cancel" id="editGroupCancelBtn">Cancel</button>
+            <button class="dialog-btn confirm" id="editGroupConfirmBtn">Save</button>
+        </div>
+    </div>
+</div>
+
+<script src="../js/theme.js"></script>
+<script src="../js/group-chat.js"></script>
+</body>
+</html>

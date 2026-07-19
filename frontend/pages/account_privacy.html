@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>account&privacy</title>
+</head>
+<body>
+
+<div class="settings-container">
+    <!-- back to settings -->
+    <a href="../pages/settings.html" class="back-btn"><span class="back-icon">←</span></a>
+
+    <div class="profile-detail-container">
+        <div class="info-card">
+
+            <!--change username field-->
+            <div class="info-row">
+                <span class="label">username</span>
+                <span id="text-username" class="value-text"></span>
+                <input type="text" id="input-username" class="value-input">
+            </div>
+
+
+            <!--change number field-->
+            <div class="info-row">
+                <span class="label">number</span>
+                <span id="text-number" class="value-text"></span>
+                <input type="text" id="input-number" class="value-input">
+            </div>
+
+
+            <!--change password field-->
+            <div class="info-row">
+                <span class="label">password</span>
+                <span id="text-password" class="value-text"></span>
+                <input type="password" id="input-password" class="value-input">
+            </div>
+        </div>
+
+
+        <!-- edit and save button -->
+        <button id="main-btn" class="edit-btn" onclick="toggleEdit()">edit</button>
+
+        <!-- delete account button -->
+        <div class="delete-section">
+            <button class="delete-btn" onclick="deleteAccount()">delete account</button>
+        </div>
+    </div>
+</div>
+<!-- style -->
+<link rel="stylesheet" href="../css/account_privacy.css">
+<!-- script -->
+<script src="../js/theme.js"></script>
+<script src="../js/account_privacy.js"></script>
+</body>
+</html>
